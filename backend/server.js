@@ -33,7 +33,7 @@ app.use("/api/order", orderRoutes);
 app.use("/api/order-detail", orderDetailRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/product-spec", productSpecRoutes);
-app.use("/api/product-discount", productDiscountRoutes);
+app.use("/image", express.static("public/image"));
 /* TEST */
 app.get('/', (req, res) => {
     res.send('API running');

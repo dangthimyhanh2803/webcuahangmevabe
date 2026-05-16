@@ -1,5 +1,5 @@
 .category {
-    width: 250px;
+    align-self: flex-start;
     background: rgba(255, 158, 207, 0.24);;
     border-radius: 10px;
     padding: 10px;

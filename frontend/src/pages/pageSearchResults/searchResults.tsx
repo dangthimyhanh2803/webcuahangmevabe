@@ -6,7 +6,7 @@ import banner1 from "../../assets/banners/banner1.png";
 import banner2 from "../../assets/banners/banner2.png";
 import banner3 from "../../assets/banners/banner3.png";
 import { mockProducts } from "../../data/mockProducts";
-
+import Pagination from "../../components/pagination";
 
 const SearchResults: React.FC = () => {
     const [sort, setSort] = useState("default");
@@ -61,24 +61,11 @@ const SearchResults: React.FC = () => {
                     {/* PRODUCT LIST */}
                     <ProductGrid products={currentProducts} />
 
-                    <div className="pagination">
-                        <button className="page-nav" disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(currentPage - 1)}>◀
-                        </button>
-
-                        {[...Array(totalPages)].map((_, index) => (
-                            <button
-                                key={index}
-                                className={currentPage === index + 1 ? "active" : ""}
-                                onClick={() => setCurrentPage(index + 1)}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
-
-                        <button className="page-nav" disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(currentPage + 1)}>▶</button>
-                    </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        setCurrentPage={setCurrentPage}
+                    />
                 </div>
             </div>
         </div>

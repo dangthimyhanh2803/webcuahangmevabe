@@ -4,28 +4,58 @@ const db = require("../config/db");
 const getProducts = (callback) => {
 
     const sql = `
-        SELECT 
-            products.*,
-            categories.categoryName
-        FROM products
-        LEFT JOIN categories
-        ON products.categoryId = categories.categoryId
+        SELECT
+            p.productId,
+            p.productName,
+            p.price,
+            p.description,
+            p.status,
+            p.created_at,
+
+            c.categoryName,
+
+            pi.imageUrl
+
+        FROM products p
+
+                 LEFT JOIN categories c
+                           ON p.categoryId = c.categoryId
+
+                 LEFT JOIN product_images pi
+                           ON p.productId = pi.productId
+                               AND pi.isMain = TRUE
     `;
 
     db.query(sql, callback);
 };
 
+
 /* GET PRODUCT BY ID */
 const getProductById = (id, callback) => {
 
     const sql = `
-        SELECT 
-            products.*,
-            categories.categoryName
-        FROM products
-        LEFT JOIN categories
-        ON products.categoryId = categories.categoryId
-        WHERE productId = ?
+        SELECT
+            p.productId,
+            p.productName,
+            p.price,
+            p.description,
+            p.status,
+            p.created_at,
+
+            c.categoryName,
+
+            pi.imageUrl
+
+        FROM products p
+
+                 LEFT JOIN categories c
+                           ON p.categoryId = c.categoryId
+
+                 LEFT JOIN product_images pi
+                           ON p.productId = pi.productId
+                               AND pi.isMain = TRUE
+
+        WHERE p.productId = ?
     `;
 
     db.query(sql, [id], callback);
