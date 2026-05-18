@@ -1,0 +1,181 @@
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 70px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 30px;
+    background-color: #22c55e;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-logo {
+    height: 45px;
+    width: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.header-center {
+    flex: 1;/*
+    max-width: 400px;*/
+    display: flex;
+    justify-content: center;
+}
+
+/* ===== SEARCH BOX ===== */
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+
+    border-radius: 30px;
+    padding: 10px 16px;
+
+    width: 100%;
+    max-width: 420px;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.25s ease;
+}
+
+/* hover nhẹ */
+.search-box:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* focus vào input */
+.search-box:focus-within {
+    border: 1px solid #f43f5e; /* màu hồng nhẹ */
+    box-shadow: 0 0 0 3px rgba(244,63,94,0.15);
+}
+
+/* ICON */
+.search-box img {
+    width: 18px;
+    margin-right: 10px;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+/* khi focus icon đậm hơn */
+.search-box:focus-within img {
+    opacity: 1;
+}
+
+/* INPUT */
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+
+    font-size: 14px;
+    background: transparent;
+}
+
+/* placeholder */
+.search-box input::placeholder {
+    color: #9ca3af;
+}
+
+/* khi focus chữ đậm hơn */
+.search-box input:focus {
+    color: #111;
+}
+/* ===== RIGHT AREA ===== */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* LOGIN */
+.user-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 15px;
+    border-right: 1px solid white;
+}
+
+.login-link {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-link:hover {
+    color: #d1fae5;
+}
+.cart-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 15px;
+    border-right: 1px solid white;
+}
+
+.cart-link {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cart-link:hover {
+    color: #d1fae5;
+}
+/* ICONS */
+.header-icons {
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.header-icons:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .search-box {
+        width: 250px;
+    }
+}
+
+@media (max-width: 600px) {
+    .header {
+        padding: 0 10px;
+    }
+
+    .search-box {
+        width: 180px;
+    }
+
+    .login-link {
+        display: none;
+    }
+}

@@ -1,0 +1,132 @@
+.login-page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    background: #39b54a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    color: white;
+}
+
+.logo {
+    background: pink;
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+}
+.login-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.divider {
+    width: 1px;
+    height: 20px;
+    background: white;
+    margin: 0 15px;
+}
+
+.bell {
+    font-size: 20px;
+}
+
+/* BACKGROUND */
+.background {
+    margin-top: 70px;
+    flex: 1;
+    background: url("../../assets/backgrounds/background.png") no-repeat center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* FORM */
+.form-wrapper {
+    background: rgba(255, 109, 153, 0.73);
+    padding: 35px;
+    position: absolute;
+    top: 120px;
+    left: 850px;
+    border-radius: 10px;
+
+}
+
+.form-box {
+    background: #ffffff;
+    padding: 20px;
+    width: 330px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;text-align: center;
+}
+
+.form-box h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.form-box p {
+    font-size: 13px;
+    margin: 0 0 10px 0;
+}
+
+.form-box input[type="text"] {
+    width: 80%;
+    padding: 12px 16px;
+    border: 1.5px solid #ff7f7f;
+    border-radius: 99px;
+    outline: none;
+    font-size: 12px;
+}
+
+.form-box input[type="password"] {
+    width: 80%;
+    padding: 12px 16px;
+    border: 1.5px solid #ff7f7f;
+    border-radius: 99px;
+    outline: none;
+    font-size: 12px;
+}
+
+.checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    margin-top: 5px;
+}
+.checkbox input {
+    margin-top: 4px;
+    transform: scale(1.1);
+}
+.checkbox span {
+    line-height: 1.4;
+    max-width: 240px;
+    text-align: left;
+}
+button {
+    background: #ff5c8a;
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #ff3d73;
+}
