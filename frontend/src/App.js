@@ -42,7 +42,8 @@ import Account from "./pages/pageAccount/account";
 import Cart from "./pages/pageCart/cart";
 import Payment from "./pages/pagePayment/payment";
 import DetailProduct from "./pages/pageDetailsProducts/detailProduct";
-
+import History from "./pages/pageHistory/history";
+import { ConfirmCOD, ConfirmMoMo, ConfirmVNPAY } from "./pages/pagePayment/confirmPages";
 function App() {
     return (
         <BrowserRouter>
@@ -56,9 +57,12 @@ function App() {
                     <Route path="/account" element={<Account />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/payment" element={<Payment />} />
+                    <Route path="/history" element={<History />} />
                     <Route path="/detailproduct/:id" element={<DetailProduct />} />
                 </Route>
-
+                <Route path="/payment/confirm-cod" element={<ConfirmCOD />} />
+                <Route path="/payment/confirm-momo" element={<ConfirmMoMo />} />
+                <Route path="/payment/confirm-vnpay" element={<ConfirmVNPAY />} />
                 {/* Layout login */}
                 <Route element={<LoginLayout />}>
                     <Route path="/login" element={<Login />} />
