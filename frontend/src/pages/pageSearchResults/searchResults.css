@@ -1,0 +1,173 @@
+/* PAGE */
+.search-page {
+    padding: 20px;
+}
+
+/* BREADCRUMB (giữ giống home) */
+.breadcrumb {
+    font-size: 14px;
+    color: rgba(255, 109, 153, 0.73);
+    margin: 55px 15px 10px 0;
+    font-weight: 500;
+}
+.breadcrumb a {
+    text-decoration: none;
+    color: rgba(255, 109, 153, 0.73);
+    transition: 0.2s;
+}
+.breadcrumb a:hover {
+    text-decoration: underline;
+    color: #16a34a;
+}
+
+/* LAYOUT */
+.search-container {
+    display: flex;
+    gap: 20px;
+}
+
+/* LEFT SIDEBAR */
+.category {
+    width: 250px;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+/* RIGHT CONTENT */
+.search-content {
+    flex: 1;
+}
+
+/* HEADER (title + sort) */
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+.search-header select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgb(255, 109, 153);
+    cursor: pointer;
+    color: rgb(255, 109, 153);
+    font-weight: 600;
+}
+
+/* BANNER */
+.banner-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.banner-container img {
+    width: 30%;
+    height: 30%;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.banner-container img:hover {
+    transform: scale(1.02);
+}
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+/* PAGINATION */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 8px;
+}
+
+/* nút số */
+.pagination button {
+    padding: 8px 14px;
+    width: 100px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+
+    background: #fce7f3;
+    color: #db2777;
+
+    transition: 0.3s;
+}
+
+/* hover */
+.pagination button:hover {
+    background: #bbf7d0;
+    color: #15803d;
+    transform: translateY(-2px);
+}
+
+/* active */
+.pagination .active {
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.73), rgba(74, 222, 128, 0.75));
+    color: white;
+    font-weight: bold;
+}
+
+/* disable */
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.pagination .page-nav {
+    padding: 6px 5px;       /* nhỏ lại */
+    max-width: 62px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dcfce7;
+    color: #16a34a;
+}
+/* hover riêng */
+.pagination .page-nav:hover {
+    background: #fbcfe8;
+    color: #be185d;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .search-container {
+        flex-direction: column;
+    }
+
+    .category {
+        width: 100%;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}

@@ -1,0 +1,35 @@
+.category {
+    width: 250px;
+    background: rgba(255, 158, 207, 0.24);;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.category h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.category ul {
+    list-style: none;
+    padding: 0;
+}
+
+.category li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px;
+    border-bottom: 1px solid rgba(22, 163, 74, 0.29);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.category li:hover {
+    background: rgba(22, 163, 74, 0.33);
+}
+
+.category img {
+    width: 50px;
+    height: 50px;
+}

@@ -1,0 +1,67 @@
+.pcard {
+    width: 240px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    position: relative;
+    transition: 0.3s;
+}
+
+.pcard:hover {
+    transform: translateY(-5px);
+}
+
+.pcard-img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.pcard-info {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.pcard-name {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+}
+
+.pcard-price {
+    color: #2563eb;
+    font-weight: bold;
+}
+.pcard-add {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent-pink);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
+.pcard-add:hover {
+    transform: scale(1.1);
+    background: #fd2381;
+}
+
+.pcard-add:active {
+    transform: scale(0.95);
+}
+.pcard-add i {
+    font-size: 16px;
+    pointer-events: none; /* tránh click lệch */
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
+}
