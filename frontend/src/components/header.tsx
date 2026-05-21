@@ -26,11 +26,15 @@ const Header: React.FC = () => {
         useNavigate();
     // đọc localStorage
     useEffect(() => {
-        const storedUser =
-            localStorage.getItem("user");
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
+        const loadUser = () => {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        };
+        loadUser();
+        window.addEventListener("userUpdated", loadUser);
+        return () => window.removeEventListener("userUpdated", loadUser);
     }, []);
 
     const handleSearch = () => {

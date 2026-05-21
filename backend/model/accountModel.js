@@ -100,12 +100,47 @@ const verifyOtp = (
         [phone, otp],
         callback
     );
+
 };
+const updateAccount = (id, data, callback) => {
+
+    const sql = `
+        UPDATE users
+        SET 
+            userName = ?,
+            email = ?,
+            phone = ?,
+            gender = ?,
+            birthDate = ?,
+            updated_at = NOW()
+        WHERE userId = ?
+    `;
+
+    db.query(
+        sql,
+        [
+            data.userName || "",
+            data.email || "",
+            data.phone || "",
+            data.gender || null,
+            data.birthDate || null,
+            id
+        ],
+        callback
+    );
+};
+const updateAvatar = (id, avatar, callback) => {
+    const sql = `UPDATE users SET avatar = ?, updated_at = NOW() WHERE userId = ?`;
+    db.query(sql, [avatar, id], callback);
+};
+
 module.exports = {
     getAccounts,
     getAccountById,
     createAccount,
     findByPhone,
     saveOtp,
-    verifyOtp
+    verifyOtp,
+    updateAccount,
+    updateAvatar
 };

@@ -4,10 +4,12 @@ import axios from "axios";
 
 type Props = {
     phone: string;
+    onSuccess: () => void;
 };
 
 const RegisterForm: React.FC<Props> = ({
-                                           phone
+                                           phone,
+                                           onSuccess
                                        }) => {
 
     const [userName, setUserName] =
@@ -43,7 +45,7 @@ const RegisterForm: React.FC<Props> = ({
 
             try {
 
-                const res = await axios.post(
+                await axios.post(
                     "http://localhost:5000/api/account/register",
                     {
                         userName,
@@ -53,9 +55,17 @@ const RegisterForm: React.FC<Props> = ({
                     }
                 );
 
-                console.log(res.data);
+                const loginRes = await axios.post(
+                    "http://localhost:5000/api/account/login",
+                    { phone, password }
+                );
 
-                alert("Đăng ký thành công");
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(loginRes.data.user)
+                );
+
+                onSuccess();
 
             } catch (error) {
 

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import "./login.css";
+import { useNavigate } from "react-router-dom";
 import PhoneForm from "../../components/phoneForm";
 import InfoForm from "../../components/infoForm";
 import OtpForm from "../../components/otpForm";
 import RegisterForm from "../../components/registerForm";
 
 const Login = () => {
+    const navigate = useNavigate();
     const [step, setStep] = useState("PHONE");
     const [phone, setPhone] =
         useState("");
@@ -45,6 +47,7 @@ const Login = () => {
 
                             <RegisterForm
                                 phone={phone}
+                                onSuccess={() => navigate("/")}
                             />
                         )
                     }

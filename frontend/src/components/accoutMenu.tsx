@@ -1,12 +1,24 @@
 import React from "react";
 import map from "../assets/icons/icondiachi.png";
 import './style/accountMenu.css';
+
 const AccountMenu: React.FC = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
     return (
         <div className="menu-account">
             <div className="user-box">
-                <div className="avatar"></div>
-                <p>Tên tài khoản</p>
+                {user.avatar ? (
+                    <img
+                        src={user.avatar}
+                        alt="avatar"
+                        className="avatar"
+                        style={{ objectFit: "cover", borderRadius: "50%" }}
+                    />
+                ) : (
+                    <div className="avatar" />
+                )}
+                <p>{user.userName || "Tài khoản"}</p>
                 <div className="address-link">
                     <img src={map} alt="map" className="promo-map" />
                     <button onClick={() => window.location.href = "/address"}>

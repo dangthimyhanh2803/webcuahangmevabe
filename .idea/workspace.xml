@@ -5,21 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="59dcd129-e92b-4fab-8894-714e7b14aca6" name="Changes" comment="Update database">
-      <change afterPath="$PROJECT_DIR$/backend/controllers/Account/checkPhone.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/controllers/Account/login.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/controllers/Account/register.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/controllers/Account/sendOtp.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/controllers/Account/verifyOtp.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/controllers/accountController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/Account/accountController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/Account/accountController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/Account/accountController.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/model/accountModel.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/model/accountModel.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/node_modules/.package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/routes/accountRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/accountRoutes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,6 +77,7 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_interpreter_path&quot;: &quot;node&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;D:\\Mon Nam 4\\ChuyenDeWeb\\Cửa hàng mẹ và bé\\Web\\frontend\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
@@ -144,6 +138,10 @@
       <workItem from="1778085786240" duration="2757000" />
       <workItem from="1778399731231" duration="6297000" />
       <workItem from="1778509117221" duration="10482000" />
+      <workItem from="1779028308455" duration="6065000" />
+      <workItem from="1779359800711" duration="1598000" />
+      <workItem from="1779379197127" duration="477000" />
+      <workItem from="1779379694041" duration="4779000" />
     </task>
     <task id="LOCAL-00001" summary="Update database">
       <option name="closed" value="true" />
