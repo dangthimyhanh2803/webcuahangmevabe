@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "./login.css";
 import { useNavigate } from "react-router-dom";
-import PhoneForm from "../../components/phoneForm";
-import InfoForm from "../../components/infoForm";
+import PhoneForm from "../../components/PhoneForm";
+import InfoForm from "../../components/InfoForm";
 import OtpForm from "../../components/otpForm";
 import RegisterForm from "../../components/registerForm";
 

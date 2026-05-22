@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./searchResults.css";
-import ProductGrid from "../../components/product/productGrid";
+import ProductGrid from "../../components/product/ProductGrid";
 import CategorySidebar from "../../components/product/CategorySidebar";
 import banner1 from "../../assets/banners/banner1.png";
 import banner2 from "../../assets/banners/banner2.png";
