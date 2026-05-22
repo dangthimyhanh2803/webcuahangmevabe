@@ -24,12 +24,26 @@ const Address: React.FC = () => {
 
     const [form, setForm] = useState(emptyForm);
     const [addresses, setAddresses] = useState<AddressItem[]>([]);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     const fetchAddresses = async () => {
         if (!currentUser.userId) return;
         try {
             const res = await axios.get(`http://localhost:5000/api/address/user/${currentUser.userId}`);
-            setAddresses(res.data);
+            const data: AddressItem[] = res.data;
+            setAddresses(data);
+            const def = data.find(a => a.isDefault === 1) || data[0];
+            if (def) {
+                setForm({
+                    fullName: def.fullName || "",
+                    phone: def.phone || "",
+                    province: def.province || "",
+                    district: def.district || "",
+                    detailAddress: def.detailAddress || "",
+                    note: def.note || ""
+                });
+                setEditingId(def.addressId);
+            }
         } catch {
             setAddresses([]);
         }
@@ -47,8 +61,19 @@ const Address: React.FC = () => {
                 isDefault: isFirst ? 1 : 0
             });
             setForm(emptyForm);
+            setEditingId(null);
             fetchAddresses();
         } catch (err) {
+            alert("Có lỗi xảy ra, vui lòng thử lại.");
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!editingId) return;
+        try {
+            await axios.put(`http://localhost:5000/api/address/${editingId}`, form);
+            fetchAddresses();
+        } catch {
             alert("Có lỗi xảy ra, vui lòng thử lại.");
         }
     };
@@ -98,7 +123,12 @@ const Address: React.FC = () => {
                     <input value={form.detailAddress} onChange={(e) => setForm({ ...form, detailAddress: e.target.value })} placeholder="Địa chỉ chi tiết..." />
                     <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Ghi chú" />
 
-                    <button className="btn-submit" onClick={handleAdd}>Thêm địa chỉ</button>
+                    <div className="btn-group">
+                        {editingId && (
+                            <button className="btn-update" onClick={handleUpdate}>Sửa</button>
+                        )}
+                        <button className="btn-submit" onClick={handleAdd}>Thêm địa chỉ</button>
+                    </div>
 
                     {/* DANH SÁCH ĐỊA CHỈ */}
                     {addresses.length > 0 && (

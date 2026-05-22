@@ -56,6 +56,11 @@
     transition: 0.2s;
 }
 
+.address-link button a {
+    color: inherit;
+    text-decoration: none;
+}
+
 .address-link button:hover {
     color: #16a34a;
     text-decoration: underline;
@@ -77,4 +82,30 @@
 .menu li.active {
     color: #db2777;
     font-weight: bold;
+}
+
+.menu li a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 0;
+}
+
+.menu > a {
+    display: block;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu > a.active {
+    color: #db2777;
+    font-weight: bold;
+}
+
+.menu > a:hover {
+    background: #fce7f3;
+    border-radius: 5px;
 }

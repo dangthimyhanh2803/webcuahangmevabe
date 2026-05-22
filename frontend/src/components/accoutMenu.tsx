@@ -4,6 +4,7 @@ import './style/accountMenu.css';
 
 const AccountMenu: React.FC = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const path = window.location.pathname;
 
     return (
         <div className="menu-account">
@@ -22,7 +23,7 @@ const AccountMenu: React.FC = () => {
                 <div className="address-link">
                     <img src={map} alt="map" className="promo-map" />
                     <button onClick={() => window.location.href = "/address"}>
-                        Địa chỉ nhận hàng
+                        <a href="/address">Địa chỉ nhận hàng</a>
                     </button>
                 </div>
             </div>
@@ -31,11 +32,15 @@ const AccountMenu: React.FC = () => {
                 <li>Thẻ thành viên</li>
                 <li>Xu của bạn</li>
                 <li>Gói ưu đãi</li>
-                <li>Địa chỉ đơn hàng</li>
-                <a href="/history">Lịch sử đơn hàng</a>
+                <li className={path === "/address" ? "active" : ""}>
+                    <a href="/address">Địa chỉ nhận hàng</a>
+                </li>
+                <a href="/history" className={path === "/history" ? "active" : ""}>Lịch sử đơn hàng</a>
                 <li>Voucher của tôi</li>
                 <li>Đánh giá của tôi</li>
-                <li className="active">Thông tin cá nhân</li>
+                <li className={path === "/account" ? "active" : ""}>
+                    <a href="/account">Thông tin cá nhân</a>
+                </li>
             </ul>
         </div>
     );
