@@ -28,6 +28,7 @@ const Home: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [sort, setSort] = useState("default");
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -54,24 +55,28 @@ const Home: React.FC = () => {
         sortedProducts.length / itemsPerPage
     );
     useEffect(() => {
-        fetchProducts();
+        fetchProducts(null);
     }, []);
-    const fetchProducts = async () => {
+
+    const fetchProducts = async (categoryId: number | null) => {
+        setLoading(true);
         try {
-
-            const response = await axios.get(
-                "http://localhost:5000/api/product"
-            );
-
-            console.log(response.data);
-
+            const url = categoryId
+                ? `http://localhost:5000/api/product?categoryId=${categoryId}`
+                : "http://localhost:5000/api/product";
+            const response = await axios.get(url);
             setProducts(response.data);
-
         } catch (error) {
             console.error("Lỗi khi lấy sản phẩm:", error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSelectCategory = (id: number | null) => {
+        setSelectedCategoryId(id);
+        setCurrentPage(1);
+        fetchProducts(id);
     };
 
     return (
@@ -82,7 +87,10 @@ const Home: React.FC = () => {
                 <a href="/">Trang chủ</a> &gt;
             </p>
             <div className="home-container">
-                <CategorySidebar />
+                <CategorySidebar
+                    selectedCategoryId={selectedCategoryId}
+                    onSelectCategory={handleSelectCategory}
+                />
                 <div className="product-section">
                     <div className="tabs">
                         <button>Sản phẩm tiêu biểu</button>

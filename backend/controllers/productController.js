@@ -3,7 +3,9 @@ const Product = require("../model/productModel");
 /* GET ALL */
 const getProducts = (req, res) => {
 
-    Product.getProducts((err, result) => {
+    const categoryId = req.query.categoryId || null;
+
+    Product.getProducts(categoryId, (err, result) => {
 
         if (err) {
             return res.status(500).json(err);

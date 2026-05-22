@@ -11,6 +11,12 @@ import Pagination from "../../components/pagination";
 const SearchResults: React.FC = () => {
     const [sort, setSort] = useState("default");
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+    const handleSelectCategory = (id: number | null) => {
+        setSelectedCategoryId(id);
+        setCurrentPage(1);
+    };
     const itemsPerPage = 8;
     const sortedProducts = [...mockProducts].sort((a, b) => {
         if (sort === "price-asc") return a.price - b.price;
@@ -36,7 +42,10 @@ const SearchResults: React.FC = () => {
 
             <div className="search-container">
                 {/* LEFT - CATEGORY */}
-                <CategorySidebar />
+                <CategorySidebar
+                    selectedCategoryId={selectedCategoryId}
+                    onSelectCategory={handleSelectCategory}
+                />
 
                 {/* RIGHT */}
                 <div className="search-content">

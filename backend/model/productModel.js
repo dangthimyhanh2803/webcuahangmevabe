@@ -1,14 +1,15 @@
 const db = require("../config/db");
 
-/* GET ALL PRODUCTS */
-const getProducts = (callback) => {
+/* GET ALL PRODUCTS (optionally filtered by categoryId) */
+const getProducts = (categoryId, callback) => {
 
-    const sql = `
+    let sql = `
         SELECT
             p.productId,
             p.productName,
             p.price,
             p.description,
+            p.categoryId,
             p.status,
             p.created_at,
 
@@ -26,7 +27,13 @@ const getProducts = (callback) => {
                                AND pi.isMain = TRUE
     `;
 
-    db.query(sql, callback);
+    const params = [];
+    if (categoryId) {
+        sql += ' WHERE p.categoryId = ?';
+        params.push(categoryId);
+    }
+
+    db.query(sql, params, callback);
 };
 
 

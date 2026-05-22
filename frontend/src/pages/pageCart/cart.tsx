@@ -6,26 +6,62 @@ import sanpham from "../../assets/icons/Sanpham.png";
 import map from "../../assets/icons/icondiachi.png";
 import voucher from "../../assets/header/voucher.svg";
 
+// Cấu trúc dữ liệu của một sản phẩm trong giỏ hàng
 interface ProductItem {
     id: number;
     name: string;
-    price: number;
+    // Lưu bảng giá theo size: cấu trúc dạng { S: 250000, M: 270000, L: 290000 }
+    priceBySize: { [key: string]: number };
     image: string;
     quantity: number;
+    size: "S" | "M" | "L"; // Size hiện tại đang chọn
     checked: boolean;
 }
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
 
-    // Khởi tạo state cho danh sách sản phẩm kèm thuộc tính số lượng (quantity) và trạng thái chọn (checked)
+    // Khởi tạo State danh sách sản phẩm kèm bảng giá riêng cho từng Size
     const [products, setProducts] = useState<ProductItem[]>([
-        { id: 1, name: "Sữa cho bé cao cấp", price: 250000, image: sanpham, quantity: 1, checked: true },
-        { id: 2, name: "Tã em bé siêu thấm", price: 180000, image: sanpham, quantity: 1, checked: true },
-        { id: 3, name: "Bình sữa an toàn", price: 120000, image: sanpham, quantity: 1, checked: true },
+        {
+            id: 1,
+            name: "Sữa cho bé cao cấp",
+            priceBySize: { S: 250000, M: 270000, L: 290000 }, // Giá tăng dần theo size
+            image: sanpham,
+            quantity: 1,
+            size: "S",
+            checked: true
+        },
+        {
+            id: 2,
+            name: "Tã em bé siêu thấm",
+            priceBySize: { S: 180000, M: 200000, L: 220000 },
+            image: sanpham,
+            quantity: 1,
+            size: "S",
+            checked: true
+        },
+        {
+            id: 3,
+            name: "Bình sữa an toàn",
+            priceBySize: { S: 120000, M: 135000, L: 150000 },
+            image: sanpham,
+            quantity: 1,
+            size: "S",
+            checked: true
+        },
     ]);
 
-    // Hàm xử lý tăng/giảm số lượng
+    // Xử lý khi người dùng thay đổi Size trong thẻ <select>
+    const handleSizeChange = (id: number, newSize: "S" | "M" | "L") => {
+        setProducts((prevProducts) =>
+            prevProducts.map((product) =>
+                product.id === id ? { ...product, size: newSize } : product
+            )
+        );
+    };
+
+    // Xử lý tăng/giảm số lượng sản phẩm (+ / -)
     const handleQuantityChange = (id: number, type: "increase" | "decrease") => {
         setProducts((prevProducts) =>
             prevProducts.map((product) => {
@@ -43,7 +79,7 @@ const CartPage: React.FC = () => {
         );
     };
 
-    // Hàm xử lý tích chọn / bỏ chọn checkbox sản phẩm (chỉ tính tiền sản phẩm được chọn)
+    // Xử lý khi tích chọn hoặc bỏ tích chọn checkbox
     const handleCheckboxChange = (id: number) => {
         setProducts((prevProducts) =>
             prevProducts.map((product) =>
@@ -52,23 +88,23 @@ const CartPage: React.FC = () => {
         );
     };
 
-    // Hàm xóa sản phẩm khỏi giỏ hàng
+    // Xử lý xóa sản phẩm khỏi giỏ hàng
     const handleDeleteProduct = (id: number) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
             setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id));
         }
     };
 
-    // LOGIC TÍNH TOÁN CÁC CHI PHÍ HÓA ĐƠN:
-    // 1. Tính tạm = Tổng (Đơn giá * Số lượng) của những sản phẩm được tích chọn
+    // LOGIC TỰ ĐỘNG TÍNH TOÁN TIỀN HÓA ĐƠN:
+    // Tính tạm = Tổng (Đơn giá của size đang chọn * Số lượng) của những sản phẩm có tích checkbox
     const temporaryTotal = products
         .filter((p) => p.checked)
-        .reduce((sum, p) => sum + p.price * p.quantity, 0);
+        .reduce((sum, p) => sum + p.priceBySize[p.size] * p.quantity, 0);
 
-    // 2. Số tiền giảm giá cố định (Ví dụ: hệ thống đang cấu hình giảm 12.000 VNĐ)
+    // Tiền giảm giá cố định (chỉ giảm khi có sản phẩm được chọn)
     const discountAmount = temporaryTotal > 0 ? 12000 : 0;
 
-    // 3. Tổng tiền cuối cùng sau giảm giá (Nếu giỏ hàng trống hoặc không chọn gì thì bằng 0)
+    // Tổng tiền thanh toán cuối cùng
     const finalTotal = Math.max(0, temporaryTotal - discountAmount);
 
     return (
@@ -89,53 +125,66 @@ const CartPage: React.FC = () => {
                             Giỏ hàng của bạn đang trống!
                         </div>
                     ) : (
-                        products.map((product) => (
-                            <div className="cart-item" key={product.id}>
-                                <div className="col-product">
-                                    <input
-                                        type="checkbox"
-                                        checked={product.checked}
-                                        onChange={() => handleCheckboxChange(product.id)}
-                                    />
-                                    <img src={product.image} alt={product.name} />
-                                    <span className="item-name">{product.name}</span>
-                                </div>
+                        products.map((product) => {
+                            // Lấy ra mức giá hiện tại tương ứng với size đang chọn
+                            const currentPrice = product.priceBySize[product.size];
 
-                                <div className="col-price">
-                                    {product.price.toLocaleString()} VNĐ
-                                </div>
+                            return (
+                                <div className="cart-item" key={product.id}>
+                                    {/* THÔNG TIN SẢN PHẨM & CHECKBOX */}
+                                    <div className="col-product">
+                                        <input
+                                            type="checkbox"
+                                            checked={product.checked}
+                                            onChange={() => handleCheckboxChange(product.id)}
+                                        />
+                                        <img src={product.image} alt={product.name} />
+                                        <span className="item-name">{product.name}</span>
+                                    </div>
 
-                                <div className="col-size">
-                                    <select>
-                                        <option>S</option>
-                                        <option>M</option>
-                                        <option>L</option>
-                                    </select>
-                                </div>
+                                    {/* ĐƠN GIÁ (TỰ ĐỘNG THAY ĐỔI THEO SIZE) */}
+                                    <div className="col-price">
+                                        {currentPrice.toLocaleString()} VNĐ
+                                    </div>
 
-                                <div className="col-quantity">
-                                    <div className="q-btn">
-                                        <button onClick={() => handleQuantityChange(product.id, "decrease")}>-</button>
-                                        <span>{product.quantity}</span>
-                                        <button onClick={() => handleQuantityChange(product.id, "increase")}>+</button>
+                                    {/* CHỌN SIZE */}
+                                    <div className="col-size">
+                                        <select
+                                            value={product.size}
+                                            onChange={(e) => handleSizeChange(product.id, e.target.value as "S" | "M" | "L")}
+                                            style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #ccc", cursor: "pointer" }}
+                                        >
+                                            <option value="S">S</option>
+                                            <option value="M">M</option>
+                                            <option value="L">L</option>
+                                        </select>
+                                    </div>
+
+                                    {/* SỐ LƯỢNG (+ / -) */}
+                                    <div className="col-quantity">
+                                        <div className="q-btn">
+                                            <button onClick={() => handleQuantityChange(product.id, "decrease")}>-</button>
+                                            <span>{product.quantity}</span>
+                                            <button onClick={() => handleQuantityChange(product.id, "increase")}>+</button>
+                                        </div>
+                                    </div>
+
+                                    {/* THÀNH TIỀN = GIÁ THEO SIZE * SỐ LƯỢNG */}
+                                    <div className="col-total">
+                                        {(currentPrice * product.quantity).toLocaleString()} VNĐ
+                                        <i
+                                            className="fa-solid fa-trash-can delete-icon"
+                                            style={{ cursor: "pointer", marginLeft: "15px", color: "#ff4d4f" }}
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                        ></i>
                                     </div>
                                 </div>
-
-                                <div className="col-total">
-                                    {/* Thành tiền của từng sản phẩm = Đơn giá * Số lượng */}
-                                    {(product.price * product.quantity).toLocaleString()} VNĐ
-                                    <i
-                                        className="fa-solid fa-trash-can delete-icon"
-                                        style={{ cursor: "pointer", marginLeft: "10px" }}
-                                        onClick={() => handleDeleteProduct(product.id)}
-                                    ></i>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
-                {/* BÊN PHẢI: KHỐI THÔNG TIN THANH TOÁN */}
+                {/* BÊN PHẢI: KHỐI TỔNG HỢP CHI PHÍ */}
                 <div className="cart-right">
                     <div className="summary-box">
                         <h3>Địa chỉ nhận hàng</h3>
@@ -169,7 +218,10 @@ const CartPage: React.FC = () => {
                         <button
                             className="btn-checkout"
                             disabled={finalTotal === 0}
-                            style={{ opacity: finalTotal === 0 ? 0.6 : 1, cursor: finalTotal === 0 ? "not-allowed" : "pointer" }}
+                            style={{
+                                opacity: finalTotal === 0 ? 0.6 : 1,
+                                cursor: finalTotal === 0 ? "not-allowed" : "pointer"
+                            }}
                             onClick={() => navigate("/payment")}
                         >
                             Thanh toán
