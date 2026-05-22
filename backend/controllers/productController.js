@@ -1,5 +1,7 @@
 const Product = require("../model/productModel");
 
+const DEFAULT_TAB_LIMIT = 24;
+
 /* GET ALL */
 const getProducts = (req, res) => {
 
@@ -79,10 +81,51 @@ const deleteProduct = (req, res) => {
     });
 };
 
+/* SEARCH PRODUCTS */
+const searchProducts = (req, res) => {
+    const keyword = req.query.keyword || "";
+    const categoryId = req.query.categoryId || null;
+    Product.searchProducts(keyword, categoryId, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
+};
+
+/* GET NEW PRODUCTS */
+const getNewProducts = (req, res) => {
+    const limit = parseInt(req.query.limit) || DEFAULT_TAB_LIMIT;
+    Product.getNewProducts(limit, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
+};
+
+/* GET BEST SELLING PRODUCTS */
+const getBestSellingProducts = (req, res) => {
+    const limit = parseInt(req.query.limit) || DEFAULT_TAB_LIMIT;
+    Product.getBestSellingProducts(limit, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
+};
+
+/* GET FEATURED PRODUCTS */
+const getFeaturedProducts = (req, res) => {
+    const limit = parseInt(req.query.limit) || DEFAULT_TAB_LIMIT;
+    Product.getFeaturedProducts(limit, (err, result) => {
+        if (err) return res.status(500).json(err);
+        res.json(result);
+    });
+};
+
 module.exports = {
     getProducts,
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    searchProducts,
+    getNewProducts,
+    getBestSellingProducts,
+    getFeaturedProducts
 };

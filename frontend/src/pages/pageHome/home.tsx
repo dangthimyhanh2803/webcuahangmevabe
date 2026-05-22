@@ -3,6 +3,9 @@ import ProductCard from "../../components/product/ProductCard";
 import CategorySidebar from "../../components/product/CategorySidebar";
 import Pagination from "../../components/pagination";
 import sanpham from "../../assets/icons/Sanpham.png";
+import banner1 from "../../assets/banners/banner1.png";
+import banner2 from "../../assets/banners/banner2.png";
+import banner3 from "../../assets/banners/banner3.png";
 import banner6 from "../../assets/banners/banner6.png";
 import banner5 from "../../assets/banners/banner5.png";
 import "./home.css";
@@ -29,6 +32,7 @@ const Home: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [sort, setSort] = useState("default");
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [activeTab, setActiveTab] = useState<"all" | "featured" | "new" | "best-selling">("featured");
 
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -54,9 +58,33 @@ const Home: React.FC = () => {
     const totalPages = Math.ceil(
         sortedProducts.length / itemsPerPage
     );
+
     useEffect(() => {
-        fetchProducts(null);
-    }, []);
+        fetchByTab(activeTab);
+    }, [activeTab]);
+
+    const fetchByTab = async (tab: "all" | "featured" | "new" | "best-selling", categoryId?: number | null) => {
+        setLoading(true);
+        try {
+            let url: string;
+            if (tab === "all") {
+                url = "http://localhost:5000/api/product";
+            } else if (tab === "featured") {
+                url = "http://localhost:5000/api/product/featured";
+            } else if (tab === "new") {
+                url = "http://localhost:5000/api/product/new";
+            } else {
+                url = "http://localhost:5000/api/product/best-selling";
+            }
+            const response = await axios.get(url);
+            setProducts(response.data);
+            setCurrentPage(1);
+        } catch (error) {
+            console.error("Lỗi khi lấy sản phẩm:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchProducts = async (categoryId: number | null) => {
         setLoading(true);
@@ -79,6 +107,11 @@ const Home: React.FC = () => {
         fetchProducts(id);
     };
 
+    const handleTabChange = (tab: "all" | "featured" | "new" | "best-selling") => {
+        setSelectedCategoryId(null);
+        setActiveTab(tab);
+    };
+
     return (
         <div className="home">
 
@@ -86,6 +119,13 @@ const Home: React.FC = () => {
             <p className="breadcrumb">
                 <a href="/">Trang chủ</a> &gt;
             </p>
+
+            <div className="banner-container">
+                <img src={banner1} alt="banner1" />
+                <img src={banner2} alt="banner2" />
+                <img src={banner3} alt="banner3" />
+            </div>
+
             <div className="home-container">
                 <CategorySidebar
                     selectedCategoryId={selectedCategoryId}
@@ -93,9 +133,30 @@ const Home: React.FC = () => {
                 />
                 <div className="product-section">
                     <div className="tabs">
-                        <button>Sản phẩm tiêu biểu</button>
-                        <button>Sản phẩm mới</button>
-                        <button>Sản phẩm bán chạy</button>
+                        <button
+                            className={activeTab === "all" ? "active" : ""}
+                            onClick={() => handleTabChange("all")}
+                        >
+                            Tất cả
+                        </button>
+                        <button
+                            className={activeTab === "featured" ? "active" : ""}
+                            onClick={() => handleTabChange("featured")}
+                        >
+                            Sản phẩm tiêu biểu
+                        </button>
+                        <button
+                            className={activeTab === "new" ? "active" : ""}
+                            onClick={() => handleTabChange("new")}
+                        >
+                            Sản phẩm mới
+                        </button>
+                        <button
+                            className={activeTab === "best-selling" ? "active" : ""}
+                            onClick={() => handleTabChange("best-selling")}
+                        >
+                            Sản phẩm bán chạy
+                        </button>
                     </div>
                     {loading ? (
                         <p>Đang tải sản phẩm...</p>

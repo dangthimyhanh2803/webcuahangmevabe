@@ -7,11 +7,21 @@ const {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    searchProducts,
+    getNewProducts,
+    getBestSellingProducts,
+    getFeaturedProducts
 } = require("../controllers/productController");
 
 /* GET ALL */
 router.get("/", getProducts);
+
+/* SEARCH / NEW / BEST SELLING / FEATURED — must be before /:id */
+router.get("/search", searchProducts);
+router.get("/new", getNewProducts);
+router.get("/best-selling", getBestSellingProducts);
+router.get("/featured", getFeaturedProducts);
 
 /* GET BY ID */
 router.get("/:id", getProductById);

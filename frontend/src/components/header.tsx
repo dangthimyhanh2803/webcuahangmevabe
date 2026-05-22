@@ -51,10 +51,10 @@ const Header: React.FC = () => {
             {/* CENTER */}
             <div className="header-center">
                 <div className="search-box">
-                    <img src={searchIcon} alt="search"/>
                     <input type="text" placeholder="Bạn cần tìm gì?" value={keyword}
                         onChange={(e) => setKey(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSearch()}/>
+                    <img src={searchIcon} alt="search" onClick={handleSearch} style={{ cursor: "pointer" }}/>
                 </div>
             </div>
 

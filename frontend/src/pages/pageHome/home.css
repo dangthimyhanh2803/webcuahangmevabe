@@ -1,6 +1,25 @@
 .home {
     padding: 20px;
 }
+
+.banner-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.banner-container img {
+    flex: 1;
+    min-width: 0;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.banner-container img:hover {
+    transform: scale(1.02);
+}
 .breadcrumb {
     font-size: 14px;
     color: rgba(255, 109, 153, 0.73);
