@@ -18,7 +18,6 @@ export interface Account {
 }
 
 const AccountPage: React.FC = () => {
-
     const currentUser = useMemo(
         () => JSON.parse(localStorage.getItem("user") || "{}"),
         []
@@ -35,19 +34,14 @@ const AccountPage: React.FC = () => {
     });
 
     // ======================
-    // GET USER
-    // ======================
     useEffect(() => {
 
         const fetchUser = async () => {
             try {
-
                 if (!currentUser.userId) return;
-
                 const res = await axios.get(
                     `http://localhost:5000/api/account/${currentUser.userId}`
                 );
-
                 const data = res.data;
                 setUser(data);
                 localStorage.setItem("user", JSON.stringify(data));
@@ -72,8 +66,6 @@ const AccountPage: React.FC = () => {
     }, []);
 
     // ======================
-    // UPDATE USER
-    // ======================
     const handleUpdate = async () => {
         try {
             const res = await axios.put(
@@ -91,8 +83,6 @@ const AccountPage: React.FC = () => {
         }
     };
 
-    // ======================
-    // UPLOAD AVATAR
     // ======================
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -124,19 +114,12 @@ const AccountPage: React.FC = () => {
                 <a href="/">Trang chủ</a> &gt;
                 <a href="/account">Trang cá nhân</a>
             </p>
-
             <div className="account-container">
-
                 <AccountMenu />
-
                 <div className="account-form">
-
                     <div className="account-form-wrapper">
-
                         <div className="form-left">
-
                             <h3>Thông tin cá nhân</h3>
-
                             <input
                                 value={form.userName}
                                 onChange={(e) =>
@@ -144,7 +127,6 @@ const AccountPage: React.FC = () => {
                                 }
                                 placeholder="Tên"
                             />
-
                             <input
                                 value={form.phone}
                                 onChange={(e) =>
@@ -152,7 +134,6 @@ const AccountPage: React.FC = () => {
                                 }
                                 placeholder="Số điện thoại"
                             />
-
                             <input
                                 value={form.email}
                                 onChange={(e) =>
@@ -162,8 +143,7 @@ const AccountPage: React.FC = () => {
                             />
 
                             <div className="row">
-                                <select
-                                    value={form.gender}
+                                <select value={form.gender}
                                     onChange={(e) =>
                                         setForm({ ...form, gender: e.target.value })
                                     }
@@ -181,16 +161,10 @@ const AccountPage: React.FC = () => {
                                     }
                                 />
                             </div>
-
-                            <button
-                                className="btn-submit"
-                                onClick={handleUpdate}
-                            >
+                            <button className="btn-submit" onClick={handleUpdate}>
                                 Cập nhật
                             </button>
-
                         </div>
-
                         <div className="form-right">
                             {user?.avatar ? (
                                 <img
