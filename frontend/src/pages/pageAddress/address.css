@@ -129,3 +129,132 @@ textarea {
     width: 100%;
     border-radius: 8px;
 }
+
+/* ADDRESS LIST */
+.address-list {
+    margin-top: 24px;
+}
+
+.address-list h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #374151;
+}
+
+.address-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.address-card {
+    border: 1px solid #fce7f3;
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #fff5f9;
+    transition: box-shadow 0.2s;
+}
+
+.address-card:hover {
+    box-shadow: 0 2px 8px rgba(219,39,119,0.1);
+}
+
+.address-card--default {
+    border-color: #db2777;
+    background: #fce7f3;
+}
+
+.address-card__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.address-card__info {
+    flex: 1;
+}
+
+.address-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.address-card__name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+}
+
+.address-card__phone {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.address-card__badge {
+    background: #db2777;
+    color: white;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.address-card__detail {
+    font-size: 13px;
+    color: #374151;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.address-card__note {
+    font-size: 12px;
+    color: #9ca3af;
+    font-style: italic;
+    margin: 2px 0 0;
+}
+
+.address-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.btn-set-default {
+    border: 1px solid #db2777;
+    color: #db2777;
+    background: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.btn-set-default:hover {
+    background: #db2777;
+    color: white;
+}
+
+.btn-delete {
+    border: none;
+    color: #9ca3af;
+    background: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-delete:hover {
+    color: #ef4444;
+}
