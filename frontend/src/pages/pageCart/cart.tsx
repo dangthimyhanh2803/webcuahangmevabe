@@ -10,23 +10,39 @@ import voucher from "../../assets/header/voucher.svg";
 interface ProductItem {
     id: number;
     name: string;
-    // Lưu bảng giá theo size: cấu trúc dạng { S: 250000, M: 270000, L: 290000 }
     priceBySize: { [key: string]: number };
     image: string;
     quantity: number;
-    size: "S" | "M" | "L"; // Size hiện tại đang chọn
+    size: "S" | "M" | "L";
     checked: boolean;
 }
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
 
-    // Khởi tạo State danh sách sản phẩm kèm bảng giá riêng cho từng Size
+    // 1. STATE QUẢN LÝ ĐỊA CHỈ NHẬN HÀNG
+    const [address, setAddress] = useState<string>(""); // Lưu địa chỉ chính thức
+    const [isEditingAddress, setIsEditingAddress] = useState<boolean>(false); // Trạng thái bật/tắt khung sửa
+    const [tempAddress, setTempAddress] = useState<string>(""); // Lưu địa chỉ tạm khi đang gõ
+
+    // Mở khung nhập địa chỉ
+    const handleEditAddress = () => {
+        setTempAddress(address);
+        setIsEditingAddress(true);
+    };
+
+    // Lưu địa chỉ
+    const handleSaveAddress = () => {
+        setAddress(tempAddress);
+        setIsEditingAddress(false);
+    };
+
+    // 2. STATE QUẢN LÝ SẢN PHẨM
     const [products, setProducts] = useState<ProductItem[]>([
         {
             id: 1,
             name: "Sữa cho bé cao cấp",
-            priceBySize: { S: 250000, M: 270000, L: 290000 }, // Giá tăng dần theo size
+            priceBySize: { S: 250000, M: 270000, L: 290000 },
             image: sanpham,
             quantity: 1,
             size: "S",
@@ -52,7 +68,6 @@ const CartPage: React.FC = () => {
         },
     ]);
 
-    // Xử lý khi người dùng thay đổi Size trong thẻ <select>
     const handleSizeChange = (id: number, newSize: "S" | "M" | "L") => {
         setProducts((prevProducts) =>
             prevProducts.map((product) =>
@@ -61,7 +76,6 @@ const CartPage: React.FC = () => {
         );
     };
 
-    // Xử lý tăng/giảm số lượng sản phẩm (+ / -)
     const handleQuantityChange = (id: number, type: "increase" | "decrease") => {
         setProducts((prevProducts) =>
             prevProducts.map((product) => {
@@ -79,7 +93,6 @@ const CartPage: React.FC = () => {
         );
     };
 
-    // Xử lý khi tích chọn hoặc bỏ tích chọn checkbox
     const handleCheckboxChange = (id: number) => {
         setProducts((prevProducts) =>
             prevProducts.map((product) =>
@@ -88,23 +101,18 @@ const CartPage: React.FC = () => {
         );
     };
 
-    // Xử lý xóa sản phẩm khỏi giỏ hàng
     const handleDeleteProduct = (id: number) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
             setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id));
         }
     };
 
-    // LOGIC TỰ ĐỘNG TÍNH TOÁN TIỀN HÓA ĐƠN:
-    // Tính tạm = Tổng (Đơn giá của size đang chọn * Số lượng) của những sản phẩm có tích checkbox
+    // 3. LOGIC TÍNH TIỀN
     const temporaryTotal = products
         .filter((p) => p.checked)
         .reduce((sum, p) => sum + p.priceBySize[p.size] * p.quantity, 0);
 
-    // Tiền giảm giá cố định (chỉ giảm khi có sản phẩm được chọn)
     const discountAmount = temporaryTotal > 0 ? 12000 : 0;
-
-    // Tổng tiền thanh toán cuối cùng
     const finalTotal = Math.max(0, temporaryTotal - discountAmount);
 
     return (
@@ -126,12 +134,10 @@ const CartPage: React.FC = () => {
                         </div>
                     ) : (
                         products.map((product) => {
-                            // Lấy ra mức giá hiện tại tương ứng với size đang chọn
                             const currentPrice = product.priceBySize[product.size];
 
                             return (
                                 <div className="cart-item" key={product.id}>
-                                    {/* THÔNG TIN SẢN PHẨM & CHECKBOX */}
                                     <div className="col-product">
                                         <input
                                             type="checkbox"
@@ -142,12 +148,10 @@ const CartPage: React.FC = () => {
                                         <span className="item-name">{product.name}</span>
                                     </div>
 
-                                    {/* ĐƠN GIÁ (TỰ ĐỘNG THAY ĐỔI THEO SIZE) */}
                                     <div className="col-price">
                                         {currentPrice.toLocaleString()} VNĐ
                                     </div>
 
-                                    {/* CHỌN SIZE */}
                                     <div className="col-size">
                                         <select
                                             value={product.size}
@@ -160,7 +164,6 @@ const CartPage: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    {/* SỐ LƯỢNG (+ / -) */}
                                     <div className="col-quantity">
                                         <div className="q-btn">
                                             <button onClick={() => handleQuantityChange(product.id, "decrease")}>-</button>
@@ -169,7 +172,6 @@ const CartPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* THÀNH TIỀN = GIÁ THEO SIZE * SỐ LƯỢNG */}
                                     <div className="col-total">
                                         {(currentPrice * product.quantity).toLocaleString()} VNĐ
                                         <i
@@ -184,15 +186,64 @@ const CartPage: React.FC = () => {
                     )}
                 </div>
 
-                {/* BÊN PHẢI: KHỐI TỔNG HỢP CHI PHÍ */}
+                {/* BÊN PHẢI: KHỐI TỔNG HỢP CHI PHÍ & ĐỊA CHỈ */}
                 <div className="cart-right">
+
+                    {/* KHỐI ĐỊA CHỈ NHẬN HÀNG MỚI BỔ SUNG */}
                     <div className="summary-box">
                         <h3>Địa chỉ nhận hàng</h3>
-                        <button className="btn-location">
-                            <img src={map} alt="map"/>
-                            Xác định địa chỉ nhận hàng
-                        </button>
+
+                        {isEditingAddress ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+                                <textarea
+                                    value={tempAddress}
+                                    onChange={(e) => setTempAddress(e.target.value)}
+                                    placeholder="Nhập địa chỉ nhận hàng của bạn..."
+                                    style={{
+                                        padding: "10px", borderRadius: "8px", border: "1px solid #ffb6c1",
+                                        minHeight: "70px", fontFamily: "inherit", resize: "none", outline: "none"
+                                    }}
+                                    autoFocus
+                                />
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <button
+                                        onClick={() => setIsEditingAddress(false)}
+                                        style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1px solid #ccc", backgroundColor: "#fff", cursor: "pointer", fontWeight: "bold", color: "#666" }}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={handleSaveAddress}
+                                        style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "none", backgroundColor: "#ff69b4", color: "#fff", cursor: "pointer", fontWeight: "bold" }}
+                                    >
+                                        Lưu địa chỉ
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            address ? (
+                                <div style={{ marginTop: "10px" }}>
+                                    <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", backgroundColor: "#fff0f6", padding: "12px", borderRadius: "8px", border: "1px dashed #ffb6c1" }}>
+                                        <img src={map} alt="map" style={{ width: "20px", height: "20px", marginTop: "2px" }} />
+                                        <span style={{ fontSize: "14px", color: "#333", flex: 1, lineHeight: "1.5" }}>{address}</span>
+                                    </div>
+                                    <button
+                                        onClick={handleEditAddress}
+                                        style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #ff69b4", color: "#ff69b4", backgroundColor: "#fff", cursor: "pointer", fontWeight: "bold", transition: "all 0.2s" }}
+                                    >
+                                        Thay đổi địa chỉ
+                                    </button>
+                                </div>
+                            ) : (
+                                <button className="btn-location" onClick={handleEditAddress}>
+                                    <img src={map} alt="map"/>
+                                    Xác định địa chỉ nhận hàng
+                                </button>
+                            )
+                        )}
                     </div>
+
+                    {/* KHỐI MÃ GIẢM GIÁ */}
                     <div className="summary-box">
                         <h3>Mã giảm giá</h3>
                         <button className="btn-coupon">
@@ -200,6 +251,8 @@ const CartPage: React.FC = () => {
                             Bấm vào để chọn hoặc nhập mã
                         </button>
                     </div>
+
+                    {/* KHỐI TỔNG TIỀN */}
                     <div className="summary-box total-box">
                         <div className="price-row">
                             <span>Tính tạm</span>
@@ -222,7 +275,14 @@ const CartPage: React.FC = () => {
                                 opacity: finalTotal === 0 ? 0.6 : 1,
                                 cursor: finalTotal === 0 ? "not-allowed" : "pointer"
                             }}
-                            onClick={() => navigate("/payment")}
+                            onClick={() => {
+                                if (!address) {
+                                    alert("Vui lòng nhập địa chỉ nhận hàng trước khi thanh toán!");
+                                    return;
+                                }
+                                // Gửi kèm địa chỉ sang trang tiếp theo
+                                navigate("/payment", { state: { address: address } });
+                            }}
                         >
                             Thanh toán
                         </button>
