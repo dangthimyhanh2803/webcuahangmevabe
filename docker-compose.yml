@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────
+  # DATABASE: MySQL
+  # ─────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: babyshop_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: babyShop
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # BACKEND: Node.js + Express
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: babyshop_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root123
+      DB_NAME: babyShop
+      PORT: 5000
+    volumes:
+      - ./backend/public/image:/app/public/image
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ─────────────────────────────────────────
+  # FRONTEND: React
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: babyshop_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

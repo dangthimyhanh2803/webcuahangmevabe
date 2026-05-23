@@ -1,6 +1,25 @@
 .home {
     padding: 20px;
 }
+
+.banner-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.banner-container img {
+    flex: 1;
+    min-width: 0;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.banner-container img:hover {
+    transform: scale(1.02);
+}
 .breadcrumb {
     font-size: 14px;
     color: rgba(255, 109, 153, 0.73);
@@ -33,7 +52,7 @@
 /* tabs */
 .tabs {
     display: flex;
-    gap: 5px;
+    gap: 2px;
     margin-bottom: 15px;
     width: 100%;
 }
@@ -46,6 +65,7 @@
     border-radius: 5px;
     color: #db2777;
     font-weight: 500;
+    height: 40px;
     transition: 0.3s;
 }
 .tabs button:hover {
@@ -62,6 +82,7 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 15px;
+
 }
 /* RIGHT SIDEBAR */
 .right-sidebar {

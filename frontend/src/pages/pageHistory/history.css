@@ -1,0 +1,161 @@
+.history {
+    padding: 20px;
+}
+.history-breadcrumb {
+    font-size: 14px;
+    color: rgba(255, 109, 153, 0.73);
+    margin: 55px 15px 10px 0;
+    font-weight: 500;
+}
+.history-breadcrumb a {
+    text-decoration: none;
+    color: rgba(255, 109, 153, 0.73);
+    transition: 0.2s;
+}
+.history-breadcrumb a:hover {
+    text-decoration: underline;
+    color: #16a34a;
+}
+/* layout chính */
+.history-container {
+    display: flex;
+    gap: 20px;
+}
+
+/* phần sản phẩm */
+.history-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* tabs */
+.history-tabs {
+    display: flex;
+    gap: 0.1px;
+    margin-bottom: 15px;
+    width: 100%;
+
+}
+
+.history-tabs button {
+    background: #fce7f3;
+    padding: 8px 10px;
+    cursor: pointer;
+    color: #db2777;
+    font-weight: 500;
+    transition: 0.3s;
+    border: none;
+    box-shadow: 0 0 0 1px #f9a8d4;
+    border-radius: 0;
+}
+.history-tabs button:hover {
+    background: #bbf7d0;
+    color: #15803d;
+}
+
+/* active (nên có state sau này) */
+.history-tabs button.active {
+    background: linear-gradient(135deg, #f472b6, #4ade80);
+    color: white;
+}
+
+.history-product{
+    flex: 2;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.history-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.5fr 1fr 1fr;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+}
+
+/* PRODUCT COLUMN */
+.history-col-product {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* ITEM */
+.history-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 0.5fr 1fr 1fr;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #f9f9f9;
+    text-align: center;
+
+}
+.history-item-name {
+    font-weight: 500;
+}
+.history-item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.history-col-size select {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+
+    outline: none;
+    transition: 0.2s;
+}
+.history-q-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.history-q-btn button {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #ddd;
+    background: var(--mint-bg);
+    border-radius: 6px;
+    color: #ed289c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.history-q-btn button:hover {
+    background: #f5f5f5;
+    border-color: var(--accent-pink);
+}
+.history-q-btn span {
+    min-width: 20px;
+    text-align: center;
+    font-size: 14px;
+    transform: translateY(4px);
+}
+/* DELETE ICON */
+.history-delete-icon {
+    color: #ff6b6b;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.history-delete-icon:hover {
+    transform: scale(1.1);
+}

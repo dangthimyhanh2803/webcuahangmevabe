@@ -1,11 +1,38 @@
-const express = require('express');
+const express = require("express");
+
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    res.json([
-        { id: 1, name: 'Sữa cho bé', price: 120000 },
-        { id: 2, name: 'Tã em bé', price: 80000 }
-    ]);
-});
+const {
+    getProducts,
+    getProductById,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    searchProducts,
+    getNewProducts,
+    getBestSellingProducts,
+    getFeaturedProducts
+} = require("../controllers/productController");
+
+/* GET ALL */
+router.get("/", getProducts);
+
+/* SEARCH / NEW / BEST SELLING / FEATURED — must be before /:id */
+router.get("/search", searchProducts);
+router.get("/new", getNewProducts);
+router.get("/best-selling", getBestSellingProducts);
+router.get("/featured", getFeaturedProducts);
+
+/* GET BY ID */
+router.get("/:id", getProductById);
+
+/* CREATE */
+router.post("/", createProduct);
+
+/* UPDATE */
+router.put("/:id", updateProduct);
+
+/* DELETE */
+router.delete("/:id", deleteProduct);
 
 module.exports = router;

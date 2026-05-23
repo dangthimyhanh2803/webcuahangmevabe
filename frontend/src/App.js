@@ -39,7 +39,7 @@ import Login from "./pages/pageLogin/login";
 import SearchResults from "./pages/pageSearchResults/searchResults";
 import Address from "./pages/pageAddress/address";
 import Account from "./pages/pageAccount/account";
-import Cart from "./pages/pageCart/cart";
+import Cart from "./pages/pageCart/cartX";
 import Payment from "./pages/pagePayment/payment";
 import DetailProduct from "./pages/pageDetailsProducts/detailProduct";
 import History from "./pages/pageHistory/history";

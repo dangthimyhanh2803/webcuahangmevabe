@@ -1,43 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "../style/category.css";
 
-import icon1 from "../../assets/icons/dogiadung.png";
-import icon2 from "../../assets/icons/thegioisua.png";
-import icon3 from "../../assets/icons/bimta.png";
-import icon4 from "../../assets/icons/thucpham_douong.png";
-import icon5 from "../../assets/icons/chamsocsuckhoe.png";
-import icon6 from "../../assets/icons/thoigiansukien.png";
-import icon7 from "../../assets/icons/dochoihoctap.png";
-import icon8 from "../../assets/icons/xetreem.png";
-import icon9 from "../../assets/icons/chamsocmevabe.png";
-import icon10 from "../../assets/icons/mypham.png";
+interface Category {
+    categoryId: number;
+    categoryName: string;
+    icon: string;
+}
 
+interface CategorySidebarProps {
+    selectedCategoryId: number | null;
+    onSelectCategory: (id: number | null) => void;
+}
 
-const categories = [
-    { name: "Đồ dùng - Gia dụng", icon: icon1 },
-    { name: "Thế giới sữa", icon: icon2 },
-    { name: "Bỉm, tã", icon: icon3 },
-    { name: "Thực phẩm & Đồ uống", icon: icon4 },
-    { name: "Chăm sóc sức khỏe", icon: icon5 },
-    { name: "Thời gian & Sự kiện", icon: icon6 },
-    { name: "Đồ chơi & Học tập", icon: icon7 },
-    { name: "Xe trẻ em", icon: icon8 },
-    { name: "Chăm sóc mẹ và bé", icon: icon9 },
-    { name: "Mỹ phẩm", icon: icon10 },
-];
+const CategorySidebar: React.FC<CategorySidebarProps> = ({ selectedCategoryId, onSelectCategory }) => {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
 
-const CategorySidebar: React.FC = () => {
+    useEffect(() => { fetchCategories(); }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/category");
+            setCategories(response.data);
+        } catch (error) {
+            console.error("Lỗi khi lấy category:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="category">
             <h3>Danh mục</h3>
-            <ul>
-                {categories.map((item, index) => (
-                    <li key={index}>
-                        <img src={item.icon} alt={item.name} />
-                        <span>{item.name}</span>
+            {loading ? (<p>Đang tải...</p>) : (
+                <ul>
+                    <li
+                        className={selectedCategoryId === null ? "active" : ""}
+                        onClick={() => onSelectCategory(null)}
+                    >
                     </li>
-                ))}
-            </ul>
+                    {categories.map((item) => (
+                        <li
+                            key={item.categoryId}
+                            className={selectedCategoryId === item.categoryId ? "active" : ""}
+                            onClick={() => onSelectCategory(item.categoryId)}
+                        >
+                            <img src={item.icon} alt={item.categoryName} />
+                            <span>{item.categoryName}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };

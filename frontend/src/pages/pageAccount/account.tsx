@@ -1,78 +1,204 @@
-import React from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import "./account.css";
-import map from "../../assets/icons/icondiachi.png";
+import AccountMenu from "../../components/accoutMenu";
+import axios from "axios";
+
+export interface Account {
+    userId: number;
+    userName: string;
+    email: string;
+    phone: string;
+    isVerified: boolean;
+    gender?: string;
+    birthDate?: string;
+    avatar?: string;
+    role: "user" | "admin";
+    created_at: string;
+    updated_at: string;
+}
 
 const AccountPage: React.FC = () => {
+    const currentUser = useMemo(
+        () => JSON.parse(localStorage.getItem("user") || "{}"),
+        []
+    );
+    const [user, setUser] = useState<Account | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [form, setForm] = useState({
+        userName: "",
+        phone: "",
+        email: "",
+        gender: "",
+        birthDate: ""
+    });
+
+    // ======================
+    useEffect(() => {
+
+        const fetchUser = async () => {
+            try {
+                if (!currentUser.userId) return;
+                const res = await axios.get(
+                    `http://localhost:5000/api/account/${currentUser.userId}`
+                );
+                const data = res.data;
+                setUser(data);
+                localStorage.setItem("user", JSON.stringify(data));
+
+                setForm({
+                    userName: data.userName || "",
+                    phone: data.phone || "",
+                    email: data.email || "",
+                    gender: data.gender || "",
+                    birthDate: data.birthDate
+                        ? data.birthDate.split("T")[0]
+                        : ""
+                });
+
+            } catch (err) {
+                console.log("Load user lỗi:", err);
+            }
+        };
+
+        fetchUser();
+
+    }, []);
+
+    // ======================
+    const handleUpdate = async () => {
+        try {
+            const res = await axios.put(
+                `http://localhost:5000/api/account/${currentUser.userId}`,
+                form
+            );
+
+            setUser(res.data);
+            localStorage.setItem("user", JSON.stringify(res.data));
+            window.dispatchEvent(new Event("userUpdated"));
+            alert("Cập nhật thành công!");
+        } catch (err) {
+            console.log(err);
+            alert("Cập nhật thất bại, vui lòng thử lại!");
+        }
+    };
+
+    // ======================
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const base64 = reader.result as string;
+            try {
+                const res = await axios.put(
+                    `http://localhost:5000/api/account/${currentUser.userId}/avatar`,
+                    { avatar: base64 }
+                );
+                setUser(res.data);
+                localStorage.setItem("user", JSON.stringify(res.data));
+                window.dispatchEvent(new Event("userUpdated"));
+            } catch (err) {
+                console.log(err);
+                alert("Upload ảnh thất bại!");
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
         <div className="account-page">
 
-            {/* BREADCRUMB */}
             <p className="breadcrumb">
                 <a href="/">Trang chủ</a> &gt;
                 <a href="/account">Trang cá nhân</a>
             </p>
             <div className="account-container">
-
-                {/* LEFT SIDEBAR */}
-                <div className="left-sidebar">
-                    <div className="user-box">
-                        <div className="avatar"></div>
-                        <p>Tên tài khoản</p>
-                        <div className="address-link">
-                            <img src={map} alt="map" className="promo-map" />
-                            <button onClick={() => window.location.href = "/address"}>
-                                Địa chỉ nhận hàng
-                            </button>
-                        </div>
-                    </div>
-
-                    <ul className="menu">
-                        <li>Thẻ thành viên</li>
-                        <li>Con cưng xu</li>
-                        <li>Gói ưu đãi</li>
-                        <li>Đơn mua</li>
-                        <li>Sổ địa chỉ</li>
-                        <li>Voucher của tôi</li>
-                        <li className="active">Thông tin cá nhân</li>
-                    </ul>
-                </div>
-
-                {/* CENTER FORM */}
+                <AccountMenu />
                 <div className="account-form">
-                    <div className="account-form-wrapper ">
+                    <div className="account-form-wrapper">
                         <div className="form-left">
                             <h3>Thông tin cá nhân</h3>
-                            <p>Vui lòng cập nhật đầy đủ thông tin bên dưới</p>
-
-                            <input placeholder="Nhập tên..." />
-                            <input placeholder="Nhập số điện thoại..." />
-                            <input placeholder="Nhập email..." />
+                            <input
+                                value={form.userName}
+                                onChange={(e) =>
+                                    setForm({ ...form, userName: e.target.value })
+                                }
+                                placeholder="Tên"
+                            />
+                            <input
+                                value={form.phone}
+                                onChange={(e) =>
+                                    setForm({ ...form, phone: e.target.value })
+                                }
+                                placeholder="Số điện thoại"
+                            />
+                            <input
+                                value={form.email}
+                                onChange={(e) =>
+                                    setForm({ ...form, email: e.target.value })
+                                }
+                                placeholder="Email"
+                            />
 
                             <div className="row">
-                                <select>
-                                    <option>Giới tính</option>
-                                    <option>Nam</option>
-                                    <option>Nữ</option>
+                                <select value={form.gender}
+                                    onChange={(e) =>
+                                        setForm({ ...form, gender: e.target.value })
+                                    }
+                                >
+                                    <option value="">Giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
                                 </select>
 
-                                <input type="date" />
+                                <input
+                                    type="date"
+                                    value={form.birthDate}
+                                    onChange={(e) =>
+                                        setForm({ ...form, birthDate: e.target.value })
+                                    }
+                                />
                             </div>
-                            <button className="btn-submit">
+                            <button className="btn-submit" onClick={handleUpdate}>
                                 Cập nhật
                             </button>
                         </div>
-                        <div className="form-right">
-                            <div className="avatar-large"></div>
 
-                            <button className="btn-upload">
+
+                        <div className="form-right">
+                            {user?.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt="avatar"
+                                    className="avatar-large"
+                                    style={{ objectFit: "cover" }}
+                                />
+                            ) : (
+                                <div className="avatar-large" />
+                            )}
+
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                style={{ display: "none" }}
+                                onChange={handleAvatarChange}
+                            />
+
+                            <button
+                                className="btn-upload"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
                                 Chọn ảnh
                             </button>
                         </div>
+
                     </div>
 
-                    {/* RIGHT AVATAR
-                        */}
                 </div>
+
             </div>
         </div>
     );

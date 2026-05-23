@@ -16,10 +16,10 @@ const Header: React.FC = () => {
     return (
         <div className="header">
             <div className="header-left">
-                <img src={logo} alt="logo" className="header-logo" onClick={() => navigate('/home')}/>
+                <img src={logo} alt="logo" className="header-logo" onClick={() => navigate('/')}/>
             </div>
             <div className="header-right">
-                <div className="user-group">
+                <div className="user-group" onClick={() => navigate('/login')}>
                     <a className="login-link">Đăng nhập</a>
                     <img src={user} alt="user" className="header-icon"
                         onClick={() => {setShowSearch(!showSearch);if (showSearch) dispatch(clearKeyword());}}/>
