@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Bổ sung thêm useLocation tại đây
 import "./payment.css";
 import map from "../../assets/icons/icondiachi.png";
 import sanpham from "../../assets/icons/Sanpham.png";
@@ -7,13 +7,16 @@ import voucher from "../../assets/header/voucher.svg";
 
 const Payment: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // Khởi tạo location để lấy dữ liệu nhận được
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
+
+    // Lấy địa chỉ từ Giỏ hàng truyền sang, nếu không tìm thấy sẽ lấy địa chỉ mặc định ban đầu
+    const displayAddress = location.state?.address || "Trần Nguyên Hãn, Phường Dĩ An, Tp.Dĩ An, Tỉnh Bình Dương";
 
     const handleBackToCart = () => {
         navigate("/cart");
     };
 
-    // Điều hướng sang trang trung gian tùy theo phương thức được chọn
     const handleConfirmPayment = () => {
         if (paymentMethod === "cod") {
             navigate("/payment/confirm-cod");
@@ -38,11 +41,14 @@ const Payment: React.FC = () => {
                                 <span className="payment-phone">0123456789</span>
                             </div>
                             <div className="payment-address-detail">
-                                <p>Trần Nguyên Hãn, Phường Dĩ An, Tp.Dĩ An, Tỉnh Bình Dương</p>
+                                {/* THAY THẾ ĐỊA CHỈ TĨNH THÀNH BIẾN ĐỘNG ĐÃ NHẬN ĐƯỢC */}
+                                <p>{displayAddress}</p>
                             </div>
                         </div>
                         <div className="payment-btn-change-address">
-                            <button><i className="fa-solid fa-chevron-right"></i></button>
+                            <button onClick={handleBackToCart} title="Quay lại sửa địa chỉ">
+                                <i className="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
