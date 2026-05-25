@@ -37,81 +37,88 @@ const CartPage: React.FC = () => {
         setIsEditingAddress(false);
     };
 
-    // 2. STATE QUẢN LÝ SẢN PHẨM
-    const [products, setProducts] = useState<ProductItem[]>([
-        {
-            id: 1,
-            name: "Sữa cho bé cao cấp",
-            priceBySize: { S: 250000, M: 270000, L: 290000 },
-            image: sanpham,
-            quantity: 1,
-            size: "S",
-            checked: true
-        },
-        {
-            id: 2,
-            name: "Tã em bé siêu thấm",
-            priceBySize: { S: 180000, M: 200000, L: 220000 },
-            image: sanpham,
-            quantity: 1,
-            size: "S",
-            checked: true
-        },
-        {
-            id: 3,
-            name: "Bình sữa an toàn",
-            priceBySize: { S: 120000, M: 135000, L: 150000 },
-            image: sanpham,
-            quantity: 1,
-            size: "S",
-            checked: true
-        },
-    ]);
+    // 2. STATE QUẢN LÝ SẢN PHẨM (Trong thực tế, bạn nên đưa state này lên AppContext hoặc Redux để đồng bộ xóa)
+    // Ở đây, để giải quyết bài toán, chúng ta giả định danh sách giỏ hàng lưu ở LocalStorage hoặc State tổng.
+    const [products, setProducts] = useState<ProductItem[]>(() => {
+        const saved = localStorage.getItem("cart_products");
+        if (saved) return JSON.parse(saved);
+        return [
+            {
+                id: 1,
+                name: "Sữa cho bé cao cấp",
+                priceBySize: { S: 250000, M: 270000, L: 290000 },
+                image: sanpham,
+                quantity: 1,
+                size: "S",
+                checked: true
+            },
+            {
+                id: 2,
+                name: "Tã em bé siêu thấm",
+                priceBySize: { S: 180000, M: 200000, L: 220000 },
+                image: sanpham,
+                quantity: 1,
+                size: "S",
+                checked: true
+            },
+            {
+                id: 3,
+                name: "Bình sữa an toàn",
+                priceBySize: { S: 120000, M: 135000, L: 150000 },
+                image: sanpham,
+                quantity: 1,
+                size: "S",
+                checked: true
+            },
+        ];
+    });
+
+    // Hàm phụ trợ lưu trạng thái vào LocalStorage để trang xác nhận có thể vào xóa
+    const saveAndSetProducts = (newProducts: ProductItem[]) => {
+        setProducts(newProducts);
+        localStorage.setItem("cart_products", JSON.stringify(newProducts));
+    };
 
     const handleSizeChange = (id: number, newSize: "S" | "M" | "L") => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product) =>
-                product.id === id ? { ...product, size: newSize } : product
-            )
+        const updated = products.map((product) =>
+            product.id === id ? { ...product, size: newSize } : product
         );
+        saveAndSetProducts(updated);
     };
 
     const handleQuantityChange = (id: number, type: "increase" | "decrease") => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product) => {
-                if (product.id === id) {
-                    let newQuantity = product.quantity;
-                    if (type === "increase") {
-                        newQuantity += 1;
-                    } else if (type === "decrease" && product.quantity > 1) {
-                        newQuantity -= 1;
-                    }
-                    return { ...product, quantity: newQuantity };
+        const updated = products.map((product) => {
+            if (product.id === id) {
+                let newQuantity = product.quantity;
+                if (type === "increase") {
+                    newQuantity += 1;
+                } else if (type === "decrease" && product.quantity > 1) {
+                    newQuantity -= 1;
                 }
-                return product;
-            })
-        );
+                return { ...product, quantity: newQuantity };
+            }
+            return product;
+        });
+        saveAndSetProducts(updated);
     };
 
     const handleCheckboxChange = (id: number) => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product) =>
-                product.id === id ? { ...product, checked: !product.checked } : product
-            )
+        const updated = products.map((product) =>
+            product.id === id ? { ...product, checked: !product.checked } : product
         );
+        saveAndSetProducts(updated);
     };
 
     const handleDeleteProduct = (id: number) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
-            setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id));
+            const updated = products.filter((product) => product.id !== id);
+            saveAndSetProducts(updated);
         }
     };
 
     // 3. LOGIC TÍNH TIỀN
-    const temporaryTotal = products
-        .filter((p) => p.checked)
-        .reduce((sum, p) => sum + p.priceBySize[p.size] * p.quantity, 0);
-
+    const selectedProducts = products.filter((p) => p.checked);
+    const temporaryTotal = selectedProducts.reduce((sum, p) => sum + p.priceBySize[p.size] * p.quantity, 0);
     const discountAmount = temporaryTotal > 0 ? 12000 : 0;
     const finalTotal = Math.max(0, temporaryTotal - discountAmount);
 
@@ -186,105 +193,69 @@ const CartPage: React.FC = () => {
                     )}
                 </div>
 
-                {/* BÊN PHẢI: KHỐI TỔNG HỢP CHI PHÍ & ĐỊA CHỈ */}
+                {/* BÊN PHẢI */}
                 <div className="cart-right">
-
-                    {/* KHỐI ĐỊA CHỈ NHẬN HÀNG MỚI BỔ SUNG */}
                     <div className="summary-box">
                         <h3>Địa chỉ nhận hàng</h3>
-
                         {isEditingAddress ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
                                 <textarea
                                     value={tempAddress}
                                     onChange={(e) => setTempAddress(e.target.value)}
-                                    placeholder="Nhập địa chỉ nhận hàng của bạn..."
-                                    style={{
-                                        padding: "10px", borderRadius: "8px", border: "1px solid #ffb6c1",
-                                        minHeight: "70px", fontFamily: "inherit", resize: "none", outline: "none"
-                                    }}
+                                    placeholder="Nhập địa chỉ nhận hàng..."
+                                    style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ffb6c1", minHeight: "70px", resize: "none", outline: "none" }}
                                     autoFocus
                                 />
                                 <div style={{ display: "flex", gap: "10px" }}>
-                                    <button
-                                        onClick={() => setIsEditingAddress(false)}
-                                        style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1px solid #ccc", backgroundColor: "#fff", cursor: "pointer", fontWeight: "bold", color: "#666" }}
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        onClick={handleSaveAddress}
-                                        style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "none", backgroundColor: "#ff69b4", color: "#fff", cursor: "pointer", fontWeight: "bold" }}
-                                    >
-                                        Lưu địa chỉ
-                                    </button>
+                                    <button onClick={() => setIsEditingAddress(false)} style={{ flex: 1, padding: "8px", cursor: "pointer" }}>Hủy</button>
+                                    <button onClick={handleSaveAddress} style={{ flex: 1, padding: "8px", backgroundColor: "#ff69b4", color: "#fff", cursor: "pointer" }}>Lưu</button>
                                 </div>
                             </div>
                         ) : (
                             address ? (
                                 <div style={{ marginTop: "10px" }}>
-                                    <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", backgroundColor: "#fff0f6", padding: "12px", borderRadius: "8px", border: "1px dashed #ffb6c1" }}>
-                                        <img src={map} alt="map" style={{ width: "20px", height: "20px", marginTop: "2px" }} />
-                                        <span style={{ fontSize: "14px", color: "#333", flex: 1, lineHeight: "1.5" }}>{address}</span>
+                                    <div style={{ display: "flex", gap: "10px", backgroundColor: "#fff0f6", padding: "12px", borderRadius: "8px" }}>
+                                        <img src={map} alt="map" style={{ width: "20px", height: "20px" }} />
+                                        <span>{address}</span>
                                     </div>
-                                    <button
-                                        onClick={handleEditAddress}
-                                        style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #ff69b4", color: "#ff69b4", backgroundColor: "#fff", cursor: "pointer", fontWeight: "bold", transition: "all 0.2s" }}
-                                    >
-                                        Thay đổi địa chỉ
-                                    </button>
+                                    <button onClick={handleEditAddress} style={{ marginTop: "10px", width: "100%", padding: "8px", color: "#ff69b4", backgroundColor: "#fff", cursor: "pointer" }}>Thay đổi địa chỉ</button>
                                 </div>
                             ) : (
                                 <button className="btn-location" onClick={handleEditAddress}>
-                                    <img src={map} alt="map"/>
-                                    Xác định địa chỉ nhận hàng
+                                    <img src={map} alt="map"/> Xác định địa chỉ nhận hàng
                                 </button>
                             )
                         )}
                     </div>
 
-                    {/* KHỐI MÃ GIẢM GIÁ */}
-                    <div className="summary-box">
-                        <h3>Mã giảm giá</h3>
-                        <button className="btn-coupon">
-                            <img src={voucher} alt="voucher"/>
-                            Bấm vào để chọn hoặc nhập mã
-                        </button>
-                    </div>
-
-                    {/* KHỐI TỔNG TIỀN */}
                     <div className="summary-box total-box">
-                        <div className="price-row">
-                            <span>Tính tạm</span>
-                            <span>{temporaryTotal.toLocaleString()} VNĐ</span>
-                        </div>
-                        <div className="price-row discount">
-                            <span>Giảm giá sản phẩm</span>
-                            <span>-{discountAmount.toLocaleString()} VNĐ</span>
-                        </div>
+                        <div className="price-row"><span>Tính tạm</span><span>{temporaryTotal.toLocaleString()} VNĐ</span></div>
+                        <div className="price-row discount"><span>Giảm giá</span><span>-{discountAmount.toLocaleString()} VNĐ</span></div>
                         <hr />
-                        <div className="price-row final">
-                            <strong>Tổng tiền</strong>
-                            <strong className="total-price">{finalTotal.toLocaleString()} VNĐ</strong>
-                        </div>
-                        <p className="vat-note">(Đã bao gồm VAT)</p>
+                        <div className="price-row final"><strong>Tổng tiền</strong><strong className="total-price">{finalTotal.toLocaleString()} VNĐ</strong></div>
+
                         <button
                             className="btn-checkout"
-                            disabled={finalTotal === 0}
-                            style={{
-                                opacity: finalTotal === 0 ? 0.6 : 1,
-                                cursor: finalTotal === 0 ? "not-allowed" : "pointer"
-                            }}
+                            disabled={selectedProducts.length === 0}
+                            style={{ opacity: selectedProducts.length === 0 ? 0.6 : 1, cursor: selectedProducts.length === 0 ? "not-allowed" : "pointer" }}
                             onClick={() => {
                                 if (!address) {
                                     alert("Vui lòng nhập địa chỉ nhận hàng trước khi thanh toán!");
                                     return;
                                 }
-                                // Gửi kèm địa chỉ sang trang tiếp theo
-                                navigate("/payment", { state: { address: address } });
+                                // GỬI TOÀN BỘ THÔNG TIN SẢN PHẨM ĐÃ CHỌN QUÁ STATE
+                                navigate("/payment", {
+                                    state: {
+                                        address: address,
+                                        checkoutProducts: selectedProducts,
+                                        temporaryTotal: temporaryTotal,
+                                        discountAmount: discountAmount,
+                                        finalTotal: finalTotal
+                                    }
+                                });
                             }}
                         >
-                            Thanh toán
+                            Thanh toán ({selectedProducts.length})
                         </button>
                     </div>
                 </div>
