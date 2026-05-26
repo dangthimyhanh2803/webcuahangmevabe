@@ -6,69 +6,93 @@ import sanpham from "../../assets/icons/Sanpham.png";
 import map from "../../assets/icons/icondiachi.png";
 import voucher from "../../assets/header/voucher.svg";
 
+// Cấu trúc dữ liệu của một sản phẩm trong giỏ hàng
 interface ProductItem {
     id: number;
     name: string;
-    price: number;
+    priceBySize: { [key: string]: number };
     image: string;
     quantity: number;
+    size: "S" | "M" | "L";
     checked: boolean;
 }
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
 
-    // Khởi tạo state cho danh sách sản phẩm kèm thuộc tính số lượng (quantity) và trạng thái chọn (checked)
-    const [products, setProducts] = useState<ProductItem[]>([
-        { id: 1, name: "Sữa cho bé cao cấp", price: 250000, image: sanpham, quantity: 1, checked: true },
-        { id: 2, name: "Tã em bé siêu thấm", price: 180000, image: sanpham, quantity: 1, checked: true },
-        { id: 3, name: "Bình sữa an toàn", price: 120000, image: sanpham, quantity: 1, checked: true },
-    ]);
+    // 1. STATE QUẢN LÝ ĐỊA CHỈ NHẬN HÀNG
+    const [address, setAddress] = useState<string>("");
+    const [isEditingAddress, setIsEditingAddress] = useState<boolean>(false);
+    const [tempAddress, setTempAddress] = useState<string>("");
 
-    // Hàm xử lý tăng/giảm số lượng
+    const handleEditAddress = () => {
+        setTempAddress(address);
+        setIsEditingAddress(true);
+    };
+
+    const handleSaveAddress = () => {
+        setAddress(tempAddress);
+        setIsEditingAddress(false);
+    };
+
+    // 2. STATE QUẢN LÝ SẢN PHẨM: ĐÃ XÓA SẢN PHẨM MẶC ĐỊNH
+    const [products, setProducts] = useState<ProductItem[]>(() => {
+        // Chỉ lấy dữ liệu từ LocalStorage được lưu khi ấn nút "Thêm vào giỏ hàng"
+        const saved = localStorage.getItem("cart_products");
+        return saved ? JSON.parse(saved) : []; // Nếu chưa có sản phẩm nào thì trả về mảng rỗng []
+    });
+
+    // Hàm lưu trạng thái giỏ hàng cập nhật vào LocalStorage
+    const saveAndSetProducts = (newProducts: ProductItem[]) => {
+        setProducts(newProducts);
+        localStorage.setItem("cart_products", JSON.stringify(newProducts));
+    };
+
+    const handleSizeChange = (id: number, newSize: "S" | "M" | "L") => {
+        const updated = products.map((product) =>
+            product.id === id ? { ...product, size: newSize } : product
+        );
+        saveAndSetProducts(updated);
+    };
+
     const handleQuantityChange = (id: number, type: "increase" | "decrease") => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product) => {
-                if (product.id === id) {
-                    let newQuantity = product.quantity;
-                    if (type === "increase") {
-                        newQuantity += 1;
-                    } else if (type === "decrease" && product.quantity > 1) {
-                        newQuantity -= 1;
-                    }
-                    return { ...product, quantity: newQuantity };
+        const updated = products.map((product) => {
+            if (product.id === id) {
+                let newQuantity = product.quantity;
+                if (type === "increase") {
+                    newQuantity += 1;
+                } else if (type === "decrease" && product.quantity > 1) {
+                    newQuantity -= 1;
                 }
-                return product;
-            })
-        );
+                return { ...product, quantity: newQuantity };
+            }
+            return product;
+        });
+        saveAndSetProducts(updated);
     };
 
-    // Hàm xử lý tích chọn / bỏ chọn checkbox sản phẩm (chỉ tính tiền sản phẩm được chọn)
     const handleCheckboxChange = (id: number) => {
-        setProducts((prevProducts) =>
-            prevProducts.map((product) =>
-                product.id === id ? { ...product, checked: !product.checked } : product
-            )
+        const updated = products.map((product) =>
+            product.id === id ? { ...product, checked: !product.checked } : product
         );
+        saveAndSetProducts(updated);
     };
 
-    // Hàm xóa sản phẩm khỏi giỏ hàng
     const handleDeleteProduct = (id: number) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
-            setProducts((prevProducts) => prevProducts.filter((product) => product.id !== id));
+            const updated = products.filter((product) => product.id !== id);
+            saveAndSetProducts(updated);
         }
     };
 
-    // LOGIC TÍNH TOÁN CÁC CHI PHÍ HÓA ĐƠN:
-    // 1. Tính tạm = Tổng (Đơn giá * Số lượng) của những sản phẩm được tích chọn
-    const temporaryTotal = products
-        .filter((p) => p.checked)
-        .reduce((sum, p) => sum + p.price * p.quantity, 0);
-
-    // 2. Số tiền giảm giá cố định (Ví dụ: hệ thống đang cấu hình giảm 12.000 VNĐ)
+    // 3. LOGIC TÍNH TOÁN TIỀN TỰ ĐỘNG
+    const selectedProducts = products.filter((p) => p.checked);
+    const temporaryTotal = selectedProducts.reduce((sum, p) => {
+        // Phòng hờ nếu cấu trúc dữ liệu truyền từ trang khác qua chỉ có trường .price thay vì .priceBySize
+        const currentPrice = p.priceBySize ? p.priceBySize[p.size] : ((p as any).price || 0);
+        return sum + currentPrice * p.quantity;
+    }, 0);
     const discountAmount = temporaryTotal > 0 ? 12000 : 0;
-
-    // 3. Tổng tiền cuối cùng sau giảm giá (Nếu giỏ hàng trống hoặc không chọn gì thì bằng 0)
     const finalTotal = Math.max(0, temporaryTotal - discountAmount);
 
     return (
@@ -85,94 +109,129 @@ const CartPage: React.FC = () => {
                     </div>
 
                     {products.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
-                            Giỏ hàng của bạn đang trống!
+                        <div style={{ textAlign: "center", padding: "100px 40px", color: "#888", fontSize: "16px" }}>
+                            🛒 Giỏ hàng của bạn đang trống! <br />
+                            <span style={{ fontSize: "14px", color: "#bbb" }}>Vui lòng quay lại trang chủ chọn sản phẩm cần mua.</span>
                         </div>
                     ) : (
-                        products.map((product) => (
-                            <div className="cart-item" key={product.id}>
-                                <div className="col-product">
-                                    <input
-                                        type="checkbox"
-                                        checked={product.checked}
-                                        onChange={() => handleCheckboxChange(product.id)}
-                                    />
-                                    <img src={product.image} alt={product.name} />
-                                    <span className="item-name">{product.name}</span>
-                                </div>
+                        products.map((product) => {
+                            const currentPrice = product.priceBySize ? product.priceBySize[product.size] : ((product as any).price || 0);
 
-                                <div className="col-price">
-                                    {product.price.toLocaleString()} VNĐ
-                                </div>
+                            return (
+                                <div className="cart-item" key={product.id}>
+                                    <div className="col-product">
+                                        <input
+                                            type="checkbox"
+                                            checked={product.checked}
+                                            onChange={() => handleCheckboxChange(product.id)}
+                                        />
+                                        <img src={product.image.startsWith("http") ? product.image : `http://localhost:5000/image/${product.image}`} alt={product.name} onError={(e) => {
+                                            (e.target as HTMLImageElement).src = sanpham; // Ảnh dự phòng nếu lỗi link đường dẫn tĩnh
+                                        }}/>
+                                        <span className="item-name">{product.name}</span>
+                                    </div>
 
-                                <div className="col-size">
-                                    <select>
-                                        <option>S</option>
-                                        <option>M</option>
-                                        <option>L</option>
-                                    </select>
-                                </div>
+                                    <div className="col-price">
+                                        {currentPrice.toLocaleString()}đ
+                                    </div>
 
-                                <div className="col-quantity">
-                                    <div className="q-btn">
-                                        <button onClick={() => handleQuantityChange(product.id, "decrease")}>-</button>
-                                        <span>{product.quantity}</span>
-                                        <button onClick={() => handleQuantityChange(product.id, "increase")}>+</button>
+                                    <div className="col-size">
+                                        <select
+                                            value={product.size}
+                                            onChange={(e) => handleSizeChange(product.id, e.target.value as "S" | "M" | "L")}
+                                            style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #ccc", cursor: "pointer" }}
+                                        >
+                                            <option value="S">S</option>
+                                            <option value="M">M</option>
+                                            <option value="L">L</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="col-quantity">
+                                        <div className="q-btn">
+                                            <button onClick={() => handleQuantityChange(product.id, "decrease")}>-</button>
+                                            <span>{product.quantity}</span>
+                                            <button onClick={() => handleQuantityChange(product.id, "increase")}>+</button>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-total">
+                                        {(currentPrice * product.quantity).toLocaleString()}đ
+                                        <i
+                                            className="fa-solid fa-trash-can delete-icon"
+                                            style={{ cursor: "pointer", marginLeft: "15px", color: "#ff4d4f" }}
+                                            onClick={() => handleDeleteProduct(product.id)}
+                                        ></i>
                                     </div>
                                 </div>
-
-                                <div className="col-total">
-                                    {/* Thành tiền của từng sản phẩm = Đơn giá * Số lượng */}
-                                    {(product.price * product.quantity).toLocaleString()} VNĐ
-                                    <i
-                                        className="fa-solid fa-trash-can delete-icon"
-                                        style={{ cursor: "pointer", marginLeft: "10px" }}
-                                        onClick={() => handleDeleteProduct(product.id)}
-                                    ></i>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
-                {/* BÊN PHẢI: KHỐI THÔNG TIN THANH TOÁN */}
+                {/* BÊN PHẢI: THÔNG TIN THANH TOÁN */}
                 <div className="cart-right">
                     <div className="summary-box">
                         <h3>Địa chỉ nhận hàng</h3>
-                        <button className="btn-location">
-                            <img src={map} alt="map"/>
-                            Xác định địa chỉ nhận hàng
-                        </button>
+                        {isEditingAddress ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+                                <textarea
+                                    value={tempAddress}
+                                    onChange={(e) => setTempAddress(e.target.value)}
+                                    placeholder="Nhập địa chỉ nhận hàng..."
+                                    style={{ padding: "10px", borderRadius: "8px", border: "1px solid #ffb6c1", minHeight: "70px", resize: "none", outline: "none" }}
+                                    autoFocus
+                                />
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <button onClick={() => setIsEditingAddress(false)} style={{ flex: 1, padding: "8px", cursor: "pointer" }}>Hủy</button>
+                                    <button onClick={handleSaveAddress} style={{ flex: 1, padding: "8px", backgroundColor: "#ff69b4", color: "#fff", cursor: "pointer" }}>Lưu</button>
+                                </div>
+                            </div>
+                        ) : (
+                            address ? (
+                                <div style={{ marginTop: "10px" }}>
+                                    <div style={{ display: "flex", gap: "10px", backgroundColor: "#fff0f6", padding: "12px", borderRadius: "8px" }}>
+                                        <img src={map} alt="map" style={{ width: "20px", height: "20px" }} />
+                                        <span>{address}</span>
+                                    </div>
+                                    <button onClick={handleEditAddress} style={{ marginTop: "10px", width: "100%", padding: "8px", color: "#ff69b4", backgroundColor: "#fff", cursor: "pointer" }}>Thay đổi địa chỉ</button>
+                                </div>
+                            ) : (
+                                <button className="btn-location" onClick={handleEditAddress}>
+                                    <img src={map} alt="map"/> Xác định địa chỉ nhận hàng
+                                </button>
+                            )
+                        )}
                     </div>
-                    <div className="summary-box">
-                        <h3>Mã giảm giá</h3>
-                        <button className="btn-coupon">
-                            <img src={voucher} alt="voucher"/>
-                            Bấm vào để chọn hoặc nhập mã
-                        </button>
-                    </div>
+
                     <div className="summary-box total-box">
-                        <div className="price-row">
-                            <span>Tính tạm</span>
-                            <span>{temporaryTotal.toLocaleString()} VNĐ</span>
-                        </div>
-                        <div className="price-row discount">
-                            <span>Giảm giá sản phẩm</span>
-                            <span>-{discountAmount.toLocaleString()} VNĐ</span>
-                        </div>
+                        <div className="price-row"><span>Tính tạm</span><span>{temporaryTotal.toLocaleString()}đ</span></div>
+                        <div className="price-row discount"><span>Giảm giá</span><span>-{discountAmount.toLocaleString()}đ</span></div>
                         <hr />
-                        <div className="price-row final">
-                            <strong>Tổng tiền</strong>
-                            <strong className="total-price">{finalTotal.toLocaleString()} VNĐ</strong>
-                        </div>
-                        <p className="vat-note">(Đã bao gồm VAT)</p>
+                        <div className="price-row final"><strong>Tổng tiền</strong><strong className="total-price">{finalTotal.toLocaleString()}đ</strong></div>
+
                         <button
                             className="btn-checkout"
-                            disabled={finalTotal === 0}
-                            style={{ opacity: finalTotal === 0 ? 0.6 : 1, cursor: finalTotal === 0 ? "not-allowed" : "pointer" }}
-                            onClick={() => navigate("/payment")}
+                            disabled={selectedProducts.length === 0}
+                            style={{ opacity: selectedProducts.length === 0 ? 0.6 : 1, cursor: selectedProducts.length === 0 ? "not-allowed" : "pointer" }}
+                            onClick={() => {
+                                if (!address) {
+                                    alert("Vui lòng nhập địa chỉ nhận hàng trước khi thanh toán!");
+                                    return;
+                                }
+                                // Gửi toàn bộ thông tin sản phẩm sang màn hình payment
+                                navigate("/payment", {
+                                    state: {
+                                        address: address,
+                                        checkoutProducts: selectedProducts,
+                                        temporaryTotal: temporaryTotal,
+                                        discountAmount: discountAmount,
+                                        finalTotal: finalTotal
+                                    }
+                                });
+                            }}
                         >
-                            Thanh toán
+                            Thanh toán ({selectedProducts.length})
                         </button>
                     </div>
                 </div>
