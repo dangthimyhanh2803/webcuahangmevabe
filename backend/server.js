@@ -29,7 +29,7 @@ app.use("/api/category", categoryRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/product-image", productImageRoutes);
 app.use("/api/discount", discountRoutes);
-app.use("/api/order", orderRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/order-detail", orderDetailRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/product-spec", productSpecRoutes);

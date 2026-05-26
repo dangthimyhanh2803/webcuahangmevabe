@@ -46,12 +46,13 @@ const Payment: React.FC = () => {
     };
 
     const handleConfirmPayment = () => {
-        // Lấy danh sách ID của các sản phẩm đang mua để trang xác nhận biết đường xóa khỏi giỏ
-        const purchaseIds = checkoutProducts.map(p => p.id);
-
+        // TRUYỀN ĐẦY ĐỦ DỮ LIỆU ĐỂ BÊN CONFIRMPAGES NHẬN ĐƯỢC
         const passState = {
-            finalAmount: finalTotal + 25000, // Cộng thêm phí ship 25k
-            purchaseIds: purchaseIds
+            checkoutProducts: checkoutProducts,
+            temporaryTotal: temporaryTotal,
+            discountAmount: discountAmount,
+            finalTotal: finalTotal,
+            // Có thể thêm userId, addressId nếu bạn quản lý State từ context
         };
 
         if (paymentMethod === "cod") {
