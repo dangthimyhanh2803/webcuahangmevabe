@@ -15,6 +15,7 @@
 .history-breadcrumb a:hover {
     text-decoration: underline;
     color: #16a34a;
+    background: linear-gradient(135deg, #c0d9fa 0%, #78adff 100%);
 }
 /* layout chính */
 .history-container {
