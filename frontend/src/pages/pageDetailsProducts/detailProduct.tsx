@@ -2,23 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './detailProduct.css';
-
+import cartIcon from '../../assets/header/cart.svg';
+interface ProductImage {
+    imageId: number;
+    productId: number;
+    imageUrl: string;
+    isMain: number; // 1 = ảnh chính, 0 = thumbnail
+}
 interface Product {
     productId: number;
     productName: string;
-    categoryId: number;
     price: number;
-    discountPercentage: number | null;
     description: string | null;
+    status: boolean;
+    created_at?: string;
+    categoryName?: string | null;
+    imageUrl?: string | null;
+    categoryId?: number;
+    discountPercentage?: number | null;
     size?: string | null;
     stockQuantity?: number;
-    productType?: string;
-    image: string | null;
-    productStatus?: string;
-    categoryName?: string;
 }
 
-// Thêm interface cho Đánh giá
 interface Review {
     reviewId?: number;
     userId?: number;
@@ -39,31 +44,80 @@ const DetailProduct: React.FC = () => {
     const [quantity, setQuantity] = useState<number>(1);
     const [activeTab, setActiveTab] = useState<'desc' | 'review'>('desc');
 
-    // === STATE CHO CHỨC NĂNG ĐÁNH GIÁ ===
     const [reviews, setReviews] = useState<Review[]>([]);
     const [userRating, setUserRating] = useState<number>(5);
     const [userComment, setUserComment] = useState<string>('');
     const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
+
+    const [mainImage, setMainImage] = useState<string>('/img/default-product.jpg');
+    const [productImages, setProductImages] = useState<string[]>([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
     useEffect(() => {
         const fetchProductData = async () => {
             try {
                 // 1. Lấy thông tin sản phẩm
                 const response = await axios.get(`http://localhost:5000/api/product/${id}`);
-                const data: Product = response.data;
+                const raw = Array.isArray(response.data) ? response.data[0] : response.data;
+
+                if (!raw) {
+                    alert("Không tìm thấy sản phẩm.");
+                    setLoading(false);
+                    return;
+                }
+
+                const data: Product = raw;
                 setProduct(data);
 
-                if (data?.size && typeof data.size === 'string') {
+                if (data.size && typeof data.size === 'string') {
                     const sizes = data.size.split(',').map(s => s.trim());
                     if (sizes.length > 0) setSelectedSize(sizes[0]);
                 }
 
-                // 2. Lấy danh sách đánh giá của sản phẩm này
+                // 2. Lấy ảnh từ API product-image
+                try {
+                    const imgRes = await axios.get(`http://localhost:5000/api/product-image/product/${id}`);
+                    const imgData: ProductImage[] = imgRes.data;
+
+                    // Ảnh chính (isMain = 1)
+                    const mainImg = imgData.find(img => img.isMain === 1);
+                    // Ảnh phụ (isMain = 0)
+                    const thumbImgs = imgData.filter(img => img.isMain === 0);
+
+                    if (mainImg) {
+                        setMainImage(mainImg.imageUrl);
+                    } else if (data.imageUrl) {
+                        // Fallback sang imageUrl từ product nếu không có ảnh main
+                        setMainImage(
+                            data.imageUrl.startsWith('http')
+                                ? data.imageUrl
+                                : `http://localhost:5000/images/${data.imageUrl}`
+                        );
+                    }
+
+                    // Thumbnails: ảnh phụ, nếu không có thì dùng ảnh main
+                    setProductImages(
+                        thumbImgs.length > 0
+                            ? thumbImgs.map(img => img.imageUrl)
+                            : mainImg ? [mainImg.imageUrl] : []
+                    );
+                } catch {
+                    // Fallback nếu API product-image lỗi
+                    if (data.imageUrl) {
+                        const resolved = data.imageUrl.startsWith('http')
+                            ? data.imageUrl
+                            : `http://localhost:5000/images/${data.imageUrl}`;
+                        setMainImage(resolved);
+                        setProductImages([resolved]);
+                    }
+                }
+
+                // 3. Lấy đánh giá
                 try {
                     const reviewRes = await axios.get(`http://localhost:5000/api/review/${id}`);
-                    setReviews(reviewRes.data);
-                } catch (reviewErr) {
-                    console.log("Sản phẩm chưa có đánh giá hoặc API review chưa sẵn sàng.");
+                    setReviews(Array.isArray(reviewRes.data) ? reviewRes.data : []);
+                } catch {
+                    // Chưa có review — bỏ qua
                 }
 
                 setLoading(false);
@@ -78,15 +132,6 @@ const DetailProduct: React.FC = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
-    const productImages = product?.image
-        ? [`http://localhost:5000/images/${product.image}`, '/img/thumb1.jpg', '/img/thumb2.jpg']
-        : ['/img/default-product.jpg'];
-    const [mainImage, setMainImage] = useState(productImages[0]);
-
-    useEffect(() => {
-        if(product?.image) setMainImage(`http://localhost:5000/images/${product.image}`);
-    }, [product]);
-
     const handleQuantityChange = (type: 'plus' | 'minus') => {
         setQuantity(prev => {
             const maxStock = product?.stockQuantity || 100;
@@ -96,7 +141,11 @@ const DetailProduct: React.FC = () => {
     };
 
     const calculatePrices = () => {
-        if (!product) return { originalPrice: '0', finalPrice: '0', discount: 0, rawFinalPrice: 0, totalPrice: '0', rawTotalPrice: 0, temporaryTotal: 0, discountAmount: 0 };
+        if (!product) return {
+            originalPrice: '0', finalPrice: '0', discount: 0,
+            rawFinalPrice: 0, totalPrice: '0', rawTotalPrice: 0,
+            temporaryTotal: 0, discountAmount: 0
+        };
 
         let basePrice = product.price || 0;
         if (selectedSize === 'M') basePrice += 20000;
@@ -104,10 +153,8 @@ const DetailProduct: React.FC = () => {
 
         const discount = product.discountPercentage || 0;
         const finalPricePerItem = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
-
         const rawTemporaryTotal = basePrice * quantity;
         const rawFinalTotal = finalPricePerItem * quantity;
-        const rawDiscountAmount = rawTemporaryTotal - rawFinalTotal;
 
         return {
             originalPrice: basePrice.toLocaleString('vi-VN'),
@@ -117,41 +164,62 @@ const DetailProduct: React.FC = () => {
             totalPrice: rawFinalTotal.toLocaleString('vi-VN'),
             rawTotalPrice: rawFinalTotal,
             temporaryTotal: rawTemporaryTotal,
-            discountAmount: rawDiscountAmount
+            discountAmount: rawTemporaryTotal - rawFinalTotal
         };
     };
 
     const { originalPrice, finalPrice, discount, rawFinalPrice, totalPrice, rawTotalPrice, temporaryTotal, discountAmount } = calculatePrices();
+    const handleAddToCart = () => {
+        if (!product) return;
 
-    // === HÀM XỬ LÝ GỬI ĐÁNH GIÁ ===
+        const cartItem = {
+            id: product.productId,
+            name: product.productName,
+            image: mainImage,
+            quantity,
+            size: selectedSize,
+            checked: true,
+            priceBySize: { [selectedSize]: rawFinalPrice }
+        };
+
+        const existingCart = localStorage.getItem("cart_products");
+        let cart = existingCart ? JSON.parse(existingCart) : [];
+
+        const existingIndex = cart.findIndex(
+            (item: any) => item.id === cartItem.id && item.size === cartItem.size
+        );
+
+        if (existingIndex !== -1) {
+            cart[existingIndex].quantity += quantity;
+        } else {
+            cart.push(cartItem);
+        }
+
+        localStorage.setItem("cart_products", JSON.stringify(cart));
+        alert("Đã thêm vào giỏ hàng!");
+    };
+
     const handleSubmitReview = async () => {
         if (!userComment.trim()) {
             alert("Vui lòng nhập nội dung đánh giá!");
             return;
         }
-
         try {
             setIsSubmittingReview(true);
-
-            // Dữ liệu gửi lên server (Tạm giả định userId = 1, thực tế bạn lấy từ LocalStorage hoặc Context khi user đăng nhập)
             const newReview = {
                 productId: product?.productId,
-                userId: 1, // <--- Thay đổi phần này theo user đang đăng nhập
+                userId: 1,
                 rating: userRating,
                 comment: userComment
             };
-
             await axios.post('http://localhost:5000/api/review', newReview);
-
             alert("Cảm ơn bạn đã gửi đánh giá!");
-
-            // Thêm ngay đánh giá mới vào danh sách hiện tại để UI cập nhật không cần load lại trang
             setReviews([{ ...newReview, userName: 'Bạn', created_at: new Date().toISOString() }, ...reviews]);
             setUserComment('');
             setUserRating(5);
         } catch (error) {
             console.error("Lỗi khi gửi đánh giá:", error);
-            alert("Có lỗi xảy ra, không thể gửi đánh giá. Vui lòng kiểm tra lại Backend!");
+            alert("Có lỗi xảy ra, không thể gửi đánh giá!");
         } finally {
             setIsSubmittingReview(false);
         }
@@ -160,11 +228,10 @@ const DetailProduct: React.FC = () => {
     if (loading) return <div className="loading-container">Đang tải...</div>;
     if (!product) return <div className="error-container">Không tìm thấy sản phẩm.</div>;
 
-    const availableSizes = (product?.size && typeof product.size === 'string')
+    const availableSizes = (product.size && typeof product.size === 'string')
         ? product.size.split(',').map(s => s.trim())
         : ['S', 'M', 'L'];
 
-    // Tính trung bình sao
     const avgRating = reviews.length > 0
         ? (reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviews.length).toFixed(1)
         : '5.0';
@@ -174,19 +241,63 @@ const DetailProduct: React.FC = () => {
             <div className="container detail-content-wrapper">
                 <div className="breadcrumb-container">
                     <Link to="/">Trang chủ</Link> /
-                    <Link to={`/category/${product.categoryId}`}>{product.categoryName || 'Danh mục'}</Link> /
+                    <Link to={product.categoryId ? `/category/${product.categoryId}` : '#'}>
+                        {product.categoryName || 'Danh mục'}
+                    </Link> /
                     <span>{product.productName}</span>
                 </div>
 
                 <div className="product-main-info row">
                     <div className="col-md-7 product-gallery">
-                        <div className="main-image-container">
-                            <img src={mainImage} alt={product.productName} className="img-fluid main-img" />
+                        {/* Ảnh chính + nút prev/next */}
+                        <div className="main-image-wrapper">
+                            <button
+                                className="img-nav-btn img-nav-prev"
+                                onClick={() => {
+                                    const allImgs = [mainImage, ...productImages.filter(img => img !== mainImage)];
+                                    const newIndex = (currentImageIndex - 1 + allImgs.length) % allImgs.length;
+                                    setCurrentImageIndex(newIndex);
+                                    setMainImage(allImgs[newIndex]);
+                                }}
+                            >&#8249;</button>
+                            <div className="main-image-container">
+                                <img
+                                    src={mainImage}
+                                    alt={product.productName}
+                                    className="img-fluid main-img"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/img/default-product.jpg';
+                                    }}
+                                />
+                            </div>
+                            <button
+                                className="img-nav-btn img-nav-next"
+                                onClick={() => {
+                                    const allImgs = [mainImage, ...productImages.filter(img => img !== mainImage)];
+                                    const newIndex = (currentImageIndex + 1) % allImgs.length;
+                                    setCurrentImageIndex(newIndex);
+                                    setMainImage(allImgs[newIndex]);
+                                }}
+                            >&#8250;</button>
                         </div>
+                        {/* Thumbnails căn giữa */}
                         <div className="thumbnail-list">
                             {productImages.map((img, index) => (
-                                <div key={index} className={`thumbnail-item ${mainImage === img ? 'active' : ''}`} onClick={() => setMainImage(img)}>
-                                    <img src={img} alt={`thumb-${index}`} />
+                                <div
+                                    key={index}
+                                    className={`thumbnail-item ${mainImage === img ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setMainImage(img);
+                                        setCurrentImageIndex(index + 1);
+                                    }}
+                                >
+                                    <img
+                                        src={img}
+                                        alt={`thumb-${index}`}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = '/img/default-product.jpg';
+                                        }}
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -196,14 +307,14 @@ const DetailProduct: React.FC = () => {
                         <h1 className="product-title">{product.productName}</h1>
 
                         <div className="product-rating-row">
-                            <div className="stars" style={{color: '#fb71b0'}}>
+                            <div className="stars" style={{ color: '#fb71b0' }}>
                                 {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
-                                <span style={{color: '#333'}}>({avgRating})</span>
+                                <span style={{ color: '#333' }}>({avgRating})</span>
                             </div>
                             <span className="divider">|</span>
                             <span className="text-muted">{reviews.length} Đánh giá</span>
                             <span className="divider">|</span>
-                            <span className="text-muted">{product.stockQuantity ? 500 : 0} Đã bán</span>
+                            <span className="text-muted">{product.stockQuantity ?? 0} Đã bán</span>
                         </div>
 
                         <div className="product-price-box">
@@ -222,7 +333,11 @@ const DetailProduct: React.FC = () => {
                             <label className="variant-label">Kích cỡ</label>
                             <div className="variant-options">
                                 {availableSizes.map(size => (
-                                    <button key={size} className={`btn-variant ${selectedSize === size ? 'active' : ''}`} onClick={() => setSelectedSize(size)}>
+                                    <button
+                                        key={size}
+                                        className={`btn-variant ${selectedSize === size ? 'active' : ''}`}
+                                        onClick={() => setSelectedSize(size)}
+                                    >
                                         {size}
                                     </button>
                                 ))}
@@ -242,20 +357,45 @@ const DetailProduct: React.FC = () => {
                         </div>
 
                         <div className="dynamic-total-box" style={{ marginTop: '20px', padding: '12px 18px', background: '#fff5f8', borderRadius: '10px', border: '1px dashed #fb71b0' }}>
-                            <span style={{ fontSize: '15px', fontWeight: '500', color: '#555' }}>Tổng tạm tính ({quantity} sản phẩm):</span>
+                            <span style={{ fontSize: '15px', fontWeight: '500', color: '#555' }}>
+                                Tổng tạm tính ({quantity} sản phẩm):
+                            </span>
                             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fb71b0', marginTop: '4px' }}>
                                 {totalPrice} đ
                             </div>
                         </div>
-
-                        <div className="action-buttons" style={{ marginTop: '25px' }}>
-                            <Link to="/payment" state={{
-                                checkoutProducts: [{ id: product.productId, name: product.productName, image: product.image ? `http://localhost:5000/images/${product.image}` : '/img/default-product.jpg', quantity, size: selectedSize, priceBySize: { [selectedSize]: rawFinalPrice } }],
-                                temporaryTotal, discountAmount, finalTotal: rawTotalPrice
-                            }} style={{ textDecoration: 'none' }}>
-                                <button className="btn-buy-now" style={{ width: '100%', padding: '15px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', boxShadow: '0 4px 15px rgba(251, 113, 176, 0.4)' }}>
-                                    MUA NGAY
-                                </button>
+                        <div className="action-buttons">
+                            {/* GIỎ HÀNG — icon only */}
+                            <button className="btn-cart" onClick={handleAddToCart}>
+                                <img
+                                    src={cartIcon}
+                                    alt="cart"
+                                    style={{
+                                        width: '22px',
+                                        height: '22px',
+                                        filter: 'invert(56%) sepia(71%) saturate(748%) hue-rotate(292deg) brightness(101%) contrast(97%)'
+                                    }}
+                                />
+                            </button>
+                            {/* MUA NGAY */}
+                            <Link
+                                to="/payment"
+                                state={{
+                                    checkoutProducts: [{
+                                        id: product.productId,
+                                        name: product.productName,
+                                        image: mainImage,
+                                        quantity,
+                                        size: selectedSize,
+                                        checked: true,
+                                        priceBySize: { [selectedSize]: rawFinalPrice }
+                                    }],
+                                    temporaryTotal,
+                                    discountAmount,
+                                    finalTotal: rawTotalPrice
+                                }}
+                            >
+                                <button className="btn-buy-now">MUA NGAY</button>
                             </Link>
                         </div>
                     </div>
@@ -281,7 +421,6 @@ const DetailProduct: React.FC = () => {
                             </div>
                         ) : (
                             <div className="reviews-content">
-                                {/* FORM ĐÁNH GIÁ MỚI */}
                                 <div className="review-form-container" style={{ padding: '20px', background: '#f9f9f9', borderRadius: '10px', marginBottom: '20px' }}>
                                     <h5>Viết đánh giá của bạn</h5>
                                     <div className="star-selection" style={{ fontSize: '24px', cursor: 'pointer', marginBottom: '10px' }}>
@@ -300,7 +439,7 @@ const DetailProduct: React.FC = () => {
                                         value={userComment}
                                         onChange={(e) => setUserComment(e.target.value)}
                                         style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px' }}
-                                    ></textarea>
+                                    />
                                     <button
                                         className="btn-buy-now"
                                         onClick={handleSubmitReview}
@@ -311,7 +450,6 @@ const DetailProduct: React.FC = () => {
                                     </button>
                                 </div>
 
-                                {/* DANH SÁCH ĐÁNH GIÁ CŨ */}
                                 <h4>Đánh giá từ khách hàng</h4>
                                 {reviews.length === 0 ? (
                                     <p className="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
