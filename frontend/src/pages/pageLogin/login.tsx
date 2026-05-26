@@ -11,6 +11,8 @@ const Login = () => {
     const [step, setStep] = useState("PHONE");
     const [phone, setPhone] =
         useState("");
+    console.log("Phone hiện tại:", phone);
+    console.log("Step hiện tại:", step);
     return (
         <div className="login-page">
             <div className="background">

@@ -998,7 +998,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
     <schema id="288" parent="1" name="babyshop">
       <AutoIntrospectionLevel>3</AutoIntrospectionLevel>
       <LastIntrospectionLevel>3</LastIntrospectionLevel>
-      <LastIntrospectionLocalTimestamp>2026-05-26.10:14:57</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2026-05-26.15:02:02</LastIntrospectionLocalTimestamp>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </schema>
     <schema id="289" parent="1" name="data_control">
@@ -1098,7 +1098,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </table>
     <column id="312" parent="300" name="addressId">
-      <AutoIncrement>10</AutoIncrement>
+      <AutoIncrement>16</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1162,7 +1162,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="326" parent="301" name="categoryId">
-      <AutoIncrement>20</AutoIncrement>
+      <AutoIncrement>31</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1186,7 +1186,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="331" parent="302" name="discountId">
-      <AutoIncrement>14</AutoIncrement>
+      <AutoIncrement>22</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1227,7 +1227,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="340" parent="303" name="orderDetailId">
-      <AutoIncrement>122</AutoIncrement>
+      <AutoIncrement>62</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1277,7 +1277,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="351" parent="304" name="orderId">
-      <AutoIncrement>68</AutoIncrement>
+      <AutoIncrement>35</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1348,7 +1348,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="367" parent="305" name="id">
-      <AutoIncrement>12</AutoIncrement>
+      <AutoIncrement>19</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1395,7 +1395,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="377" parent="306" name="id">
-      <AutoIncrement>430</AutoIncrement>
+      <AutoIncrement>646</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1437,7 +1437,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="386" parent="307" name="imageId">
-      <AutoIncrement>1070</AutoIncrement>
+      <AutoIncrement>1606</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1477,7 +1477,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="394" parent="308" name="specId">
-      <AutoIncrement>1778</AutoIncrement>
+      <AutoIncrement>2668</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1514,7 +1514,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="402" parent="309" name="productId">
-      <AutoIncrement>210</AutoIncrement>
+      <AutoIncrement>106</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1567,7 +1567,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="413" parent="310" name="reviewId">
-      <AutoIncrement>78</AutoIncrement>
+      <AutoIncrement>127</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
@@ -1641,7 +1641,7 @@ orderId</ColNames>
       <UnderlyingIndexName>userId</UnderlyingIndexName>
     </key>
     <column id="429" parent="311" name="userId">
-      <AutoIncrement>7</AutoIncrement>
+      <AutoIncrement>14</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>int|0s</StoredType>
