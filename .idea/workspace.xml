@@ -5,6 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="59dcd129-e92b-4fab-8894-714e7b14aca6" name="Changes" comment="Update database">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -36,12 +38,12 @@
     &quot;assignee&quot;: &quot;Dang-Thi-My-Hanh&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/DangThiMyHanh2803/WebCuaHangMeVaBe.git",
-    "accountId": "4e2f20df-c8c8-4ff0-985a-af572b1ac813"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/DangThiMyHanh2803/WebCuaHangMeVaBe.git&quot;,
+    &quot;accountId&quot;: &quot;4e2f20df-c8c8-4ff0-985a-af572b1ac813&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -52,6 +54,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Database Script.babyshop.executor": "Run",
+    "Database Script.database.sql.executor": "Run",
     "DefaultHtmlFileTemplate": "HTML File",
     "JavaScript Debug.index.html.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -80,6 +84,11 @@
   "keyToStringList": {
     "DatabaseDriversLRU": [
       "mysql"
+    ],
+    "RunConfigurationTargetLRU": [
+      "0f733b72-f881-482a-be8f-a31ae45cb48c/schema/\"babyshop\"",
+      "0f733b72-f881-482a-be8f-a31ae45cb48c",
+      "fa6229f2-0810-4021-9524-cced8f149b2c"
     ]
   }
 }]]></component>
@@ -95,12 +104,19 @@
       <recent name="D:\Mon Nam 4\ChuyenDeWeb\Cửa hàng mẹ và bé\Web\frontend\src\pages" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Database Script.babyshop">
+    <configuration name="babyshop" type="DatabaseScript" editBeforeRun="true" temporary="true">
+      <script-file value="$PROJECT_DIR$/database.sql" />
+      <script-mode>FILE</script-mode>
+      <data-source id="0f733b72-f881-482a-be8f-a31ae45cb48c" namespace="schema/&quot;babyshop&quot;" />
+      <method v="2" />
+    </configuration>
     <configuration name="index.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/Web/Shopping/index.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Database Script.babyshop" />
         <item itemvalue="JavaScript Debug.index.html" />
       </list>
     </recent_temporary>
@@ -147,6 +163,7 @@
       <workItem from="1779474702303" duration="1350000" />
       <workItem from="1779483521583" duration="1514000" />
       <workItem from="1779716469740" duration="3373000" />
+      <workItem from="1779789425408" duration="3536000" />
     </task>
     <task id="LOCAL-00001" summary="Update database">
       <option name="closed" value="true" />
@@ -171,7 +188,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.tsx</url>
-          <line>121</line>
+          <line>172</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

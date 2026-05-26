@@ -1,214 +1,343 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import "./detailProduct.css";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './detailProduct.css';
 
-// Khai báo cấu trúc dữ liệu sản phẩm nhận từ DB
 interface Product {
-    id: number;
-    name: string;
+    productId: number;
+    productName: string;
+    categoryId: number;
     price: number;
-    image: string;
+    discountPercentage: number | null;
+    description: string | null;
+    size?: string | null;
+    stockQuantity?: number;
+    productType?: string;
+    image: string | null;
+    productStatus?: string;
+    categoryName?: string;
+}
+
+// Thêm interface cho Đánh giá
+interface Review {
+    reviewId?: number;
+    userId?: number;
+    userName?: string;
+    rating: number;
+    comment: string;
+    created_at?: string;
 }
 
 const DetailProduct: React.FC = () => {
-    const { id } = useParams<{ id: string }>(); // Lấy mã ID sản phẩm từ URL
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    // Khởi tạo các State quản lý trạng thái tải dữ liệu
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
 
-    // State quản lý hành vi chọn thuộc tính sản phẩm của người dùng
-    const [selectedSize, setSelectedSize] = useState<string>("S");
+    const [selectedSize, setSelectedSize] = useState<string>('S');
     const [quantity, setQuantity] = useState<number>(1);
+    const [activeTab, setActiveTab] = useState<'desc' | 'review'>('desc');
 
-    // CALL API: Chạy ngay khi màn hình chi tiết sản phẩm được tải lên
+    // === STATE CHO CHỨC NĂNG ĐÁNH GIÁ ===
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [userRating, setUserRating] = useState<number>(5);
+    const [userComment, setUserComment] = useState<string>('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
+
     useEffect(() => {
-        const fetchProductDetail = async () => {
+        const fetchProductData = async () => {
             try {
-                setLoading(true);
-                // Gọi API kết nối đến cổng Backend ở port 5000
+                // 1. Lấy thông tin sản phẩm
                 const response = await axios.get(`http://localhost:5000/api/product/${id}`);
-                setProduct(response.data);
-                setError(null);
-            } catch (err: any) {
-                console.error("Lỗi fetch sản phẩm:", err);
-                setError(err.response?.data?.message || "Không thể tải thông tin sản phẩm từ hệ thống.");
-            } finally {
+                const data: Product = response.data;
+                setProduct(data);
+
+                if (data?.size && typeof data.size === 'string') {
+                    const sizes = data.size.split(',').map(s => s.trim());
+                    if (sizes.length > 0) setSelectedSize(sizes[0]);
+                }
+
+                // 2. Lấy danh sách đánh giá của sản phẩm này
+                try {
+                    const reviewRes = await axios.get(`http://localhost:5000/api/review/${id}`);
+                    setReviews(reviewRes.data);
+                } catch (reviewErr) {
+                    console.log("Sản phẩm chưa có đánh giá hoặc API review chưa sẵn sàng.");
+                }
+
+                setLoading(false);
+            } catch (error) {
+                console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+                alert("Không thể tải thông tin sản phẩm.");
                 setLoading(false);
             }
         };
 
-        if (id) {
-            fetchProductDetail();
-        }
+        if (id) fetchProductData();
+        window.scrollTo(0, 0);
     }, [id]);
 
-    // XỬ LÝ SỰ KIỆN: Tăng / Giảm số lượng mua
-    const handleQuantityChange = (type: "increase" | "decrease") => {
-        if (type === "increase") {
-            setQuantity(prev => prev + 1);
-        } else if (type === "decrease" && quantity > 1) {
-            setQuantity(prev => prev - 1);
-        }
+    const productImages = product?.image
+        ? [`http://localhost:5000/images/${product.image}`, '/img/thumb1.jpg', '/img/thumb2.jpg']
+        : ['/img/default-product.jpg'];
+    const [mainImage, setMainImage] = useState(productImages[0]);
+
+    useEffect(() => {
+        if(product?.image) setMainImage(`http://localhost:5000/images/${product.image}`);
+    }, [product]);
+
+    const handleQuantityChange = (type: 'plus' | 'minus') => {
+        setQuantity(prev => {
+            const maxStock = product?.stockQuantity || 100;
+            if (type === 'plus') return prev < maxStock ? prev + 1 : prev;
+            return prev > 1 ? prev - 1 : 1;
+        });
     };
 
-    // XỬ LÝ SỰ KIỆN: Thêm sản phẩm vào giỏ hàng LocalStorage công khai
-    const handleAddToCart = () => {
-        if (!product) return;
+    const calculatePrices = () => {
+        if (!product) return { originalPrice: '0', finalPrice: '0', discount: 0, rawFinalPrice: 0, totalPrice: '0', rawTotalPrice: 0, temporaryTotal: 0, discountAmount: 0 };
 
-        // Đọc danh sách giỏ hàng cũ đang có trong máy
-        const savedCart = localStorage.getItem("cart_products");
-        let cartList = savedCart ? JSON.parse(savedCart) : [];
+        let basePrice = product.price || 0;
+        if (selectedSize === 'M') basePrice += 20000;
+        if (selectedSize === 'L') basePrice += 40000;
 
-        // Định dạng cấu trúc giá theo kích cỡ cho khớp với logic giỏ hàng cũ
-        const priceBySize = {
-            S: product.price,
-            M: product.price + 20000,
-            L: product.price + 40000
+        const discount = product.discountPercentage || 0;
+        const finalPricePerItem = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
+
+        const rawTemporaryTotal = basePrice * quantity;
+        const rawFinalTotal = finalPricePerItem * quantity;
+        const rawDiscountAmount = rawTemporaryTotal - rawFinalTotal;
+
+        return {
+            originalPrice: basePrice.toLocaleString('vi-VN'),
+            finalPrice: finalPricePerItem.toLocaleString('vi-VN'),
+            discount,
+            rawFinalPrice: finalPricePerItem,
+            totalPrice: rawFinalTotal.toLocaleString('vi-VN'),
+            rawTotalPrice: rawFinalTotal,
+            temporaryTotal: rawTemporaryTotal,
+            discountAmount: rawDiscountAmount
         };
+    };
 
-        // Kiểm tra xem sản phẩm cùng ID và cùng Size này đã nằm trong giỏ chưa
-        const existingIndex = cartList.findIndex((item: any) => item.id === product.id && item.size === selectedSize);
+    const { originalPrice, finalPrice, discount, rawFinalPrice, totalPrice, rawTotalPrice, temporaryTotal, discountAmount } = calculatePrices();
 
-        if (existingIndex > -1) {
-            // Nếu trùng, chỉ cộng dồn thêm số lượng
-            cartList[existingIndex].quantity += quantity;
-        } else {
-            // Nếu chưa có, tiến hành thêm mới vào danh sách
-            cartList.push({
-                id: product.id,
-                name: product.name,
-                priceBySize: priceBySize,
-                image: product.image,
-                quantity: quantity,
-                size: selectedSize,
-                checked: true // Mặc định tích chọn để sẵn sàng thanh toán
-            });
+    // === HÀM XỬ LÝ GỬI ĐÁNH GIÁ ===
+    const handleSubmitReview = async () => {
+        if (!userComment.trim()) {
+            alert("Vui lòng nhập nội dung đánh giá!");
+            return;
         }
 
-        // Lưu lại vào LocalStorage
-        localStorage.setItem("cart_products", JSON.stringify(cartList));
-        alert(`🎉 Đã thêm thành công ${quantity} sản phẩm vào giỏ hàng!`);
+        try {
+            setIsSubmittingReview(true);
+
+            // Dữ liệu gửi lên server (Tạm giả định userId = 1, thực tế bạn lấy từ LocalStorage hoặc Context khi user đăng nhập)
+            const newReview = {
+                productId: product?.productId,
+                userId: 1, // <--- Thay đổi phần này theo user đang đăng nhập
+                rating: userRating,
+                comment: userComment
+            };
+
+            await axios.post('http://localhost:5000/api/review', newReview);
+
+            alert("Cảm ơn bạn đã gửi đánh giá!");
+
+            // Thêm ngay đánh giá mới vào danh sách hiện tại để UI cập nhật không cần load lại trang
+            setReviews([{ ...newReview, userName: 'Bạn', created_at: new Date().toISOString() }, ...reviews]);
+            setUserComment('');
+            setUserRating(5);
+        } catch (error) {
+            console.error("Lỗi khi gửi đánh giá:", error);
+            alert("Có lỗi xảy ra, không thể gửi đánh giá. Vui lòng kiểm tra lại Backend!");
+        } finally {
+            setIsSubmittingReview(false);
+        }
     };
 
-    // XỬ LÝ SỰ KIỆN: Ấn "Mua ngay" chuyển thẳng sang giỏ hàng / thanh toán
-    const handleBuyNow = () => {
-        handleAddToCart();
-        navigate("/cart"); // Chuyển hướng người dùng qua trang giỏ hàng để tiến hành checkout
-    };
+    if (loading) return <div className="loading-container">Đang tải...</div>;
+    if (!product) return <div className="error-container">Không tìm thấy sản phẩm.</div>;
 
-    // Giao diện hiển thị khi đang chờ đợi dữ liệu tải về từ Database
-    if (loading) {
-        return <div style={{ textAlign: "center", padding: "100px", fontSize: "18px", color: "#ff69b4" }}>⌛ Đang tải thông tin sản phẩm từ cơ sở dữ liệu...</div>;
-    }
+    const availableSizes = (product?.size && typeof product.size === 'string')
+        ? product.size.split(',').map(s => s.trim())
+        : ['S', 'M', 'L'];
 
-    // Giao diện hiển thị khi mã ID không tồn tại trong DB hoặc lỗi kết nối
-    if (error || !product) {
-        return (
-            <div style={{ textAlign: "center", padding: "100px" }}>
-                <div style={{ color: "#ff4d4f", fontSize: "18px", marginBottom: "15px" }}>⚠️ {error || "Không tìm thấy sản phẩm tương ứng!"}</div>
-                <button onClick={() => navigate("/")} style={{ padding: "10px 20px", cursor: "pointer", backgroundColor: "#ff69b4", color: "#fff", border: "none", borderRadius: "8px" }}>Quay lại trang chủ</button>
-            </div>
-        );
-    }
-
-    // Đường dẫn hình ảnh xử lý động: Kiểm tra xem link ảnh là dạng URL đầy đủ hay đường dẫn tĩnh nội bộ từ thư mục public
-    const productImageUrl = product.image.startsWith("http") ? product.image : `http://localhost:5000/image/${product.image}`;
+    // Tính trung bình sao
+    const avgRating = reviews.length > 0
+        ? (reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviews.length).toFixed(1)
+        : '5.0';
 
     return (
-        <div className="detail-page">
-            <main className="detail-container">
-                <nav className="detail-breadcrumb">
-                    <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>Trang chủ</a> /{" "}
-                    <a href="#/">Sản phẩm Mẹ & Bé</a> /{" "}
-                    <span>{product.name}</span>
-                </nav>
+        <div className="product-detail-page">
+            <div className="container detail-content-wrapper">
+                <div className="breadcrumb-container">
+                    <Link to="/">Trang chủ</Link> /
+                    <Link to={`/category/${product.categoryId}`}>{product.categoryName || 'Danh mục'}</Link> /
+                    <span>{product.productName}</span>
+                </div>
 
-                <section className="detail-product">
-                    {/* BÊN TRÁI: HÌNH ẢNH SẢN PHẨM LẤY TỪ DB */}
-                    <div className="detail-gallery">
-                        <div className="detail-main-image">
-                            <img src={productImageUrl} alt={product.name} onError={(e) => {
-                                // Fallback nếu ảnh lỗi không tìm thấy trên server
-                                (e.target as HTMLImageElement).src = "https://placehold.co/400x400?text=Green+Baby";
-                            }}/>
+                <div className="product-main-info row">
+                    <div className="col-md-7 product-gallery">
+                        <div className="main-image-container">
+                            <img src={mainImage} alt={product.productName} className="img-fluid main-img" />
                         </div>
-
-                        <div className="detail-thumbnail-list">
-                            <div className="detail-thumb active"><img src={productImageUrl} alt="thumb"/></div>
-                            <div className="detail-thumb"><img src={productImageUrl} alt="thumb"/></div>
-                            <div className="detail-thumb"><img src={productImageUrl} alt="thumb"/></div>
+                        <div className="thumbnail-list">
+                            {productImages.map((img, index) => (
+                                <div key={index} className={`thumbnail-item ${mainImage === img ? 'active' : ''}`} onClick={() => setMainImage(img)}>
+                                    <img src={img} alt={`thumb-${index}`} />
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* BÊN PHẢI: THÔNG TIN CHI TIẾT SẢN PHẨM LẤY TỪ DB */}
-                    <div className="detail-info">
-                        <h1 className="detail-price">
-                            {product.price.toLocaleString()}đ
-                        </h1>
+                    <div className="col-md-5 product-shop-ops d-flex flex-column justify-content-center ps-md-5">
+                        <h1 className="product-title">{product.productName}</h1>
 
-                        <h2 className="detail-title">
-                            {product.name}
-                        </h2>
-
-                        <div className="detail-rating">
-                            <span>4.8 </span>
-                            <div className="detail-stars">
-                                <i className="fa-solid fa-star"></i>
-                                <i className="fa-solid fa-star"></i>
-                                <i className="fa-solid fa-star"></i>
-                                <i className="fa-solid fa-star"></i>
-                                <i className="fa-solid fa-star"></i>
+                        <div className="product-rating-row">
+                            <div className="stars" style={{color: '#fb71b0'}}>
+                                {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
+                                <span style={{color: '#333'}}>({avgRating})</span>
                             </div>
-                            <span className="detail-review-count">Đánh giá: 145</span>
+                            <span className="divider">|</span>
+                            <span className="text-muted">{reviews.length} Đánh giá</span>
+                            <span className="divider">|</span>
+                            <span className="text-muted">{product.stockQuantity ? 500 : 0} Đã bán</span>
                         </div>
 
-                        <div className="detail-shipping">
-                            <p>
-                                <i className="fa-solid fa-truck-fast"></i>
-                                {" "}Giao hàng nhanh: Dự kiến nhận hàng trong 24 giờ tới.
-                            </p>
+                        <div className="product-price-box">
+                            {discount > 0 ? (
+                                <>
+                                    <span className="original-price">{originalPrice} đ</span>
+                                    <span className="final-price">{finalPrice} đ</span>
+                                    <span className="discount-tag">-{discount}%</span>
+                                </>
+                            ) : (
+                                <span className="final-price">{finalPrice} đ</span>
+                            )}
                         </div>
 
-                        {/* CHỌN SIZE */}
-                        <div className="detail-options">
-                            <span>Size:</span>
-                            <div className="detail-size-btns">
-                                {["S", "M", "L"].map((size) => (
-                                    <button
-                                        key={size}
-                                        className={selectedSize === size ? "active" : ""}
-                                        onClick={() => setSelectedSize(size)}
-                                    >
+                        <div className="variant-group">
+                            <label className="variant-label">Kích cỡ</label>
+                            <div className="variant-options">
+                                {availableSizes.map(size => (
+                                    <button key={size} className={`btn-variant ${selectedSize === size ? 'active' : ''}`} onClick={() => setSelectedSize(size)}>
                                         {size}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* ĐIỀU KHIỂN SỐ LƯỢNG */}
-                        <div className="detail-quantity">
-                            <span>Số lượng:</span>
-                            <div className="detail-q-control">
-                                <button onClick={() => handleQuantityChange("decrease")}>-</button>
-                                <span>{quantity}</span>
-                                <button onClick={() => handleQuantityChange("increase")}>+</button>
+                        <div className="quantity-group">
+                            <label className="variant-label">Số lượng</label>
+                            <div className="quantity-controller">
+                                <button onClick={() => handleQuantityChange('minus')}>-</button>
+                                <input type="number" value={quantity} readOnly />
+                                <button onClick={() => handleQuantityChange('plus')}>+</button>
+                            </div>
+                            <span className="stock-info text-muted">
+                                {product.stockQuantity || 100} sản phẩm có sẵn
+                            </span>
+                        </div>
+
+                        <div className="dynamic-total-box" style={{ marginTop: '20px', padding: '12px 18px', background: '#fff5f8', borderRadius: '10px', border: '1px dashed #fb71b0' }}>
+                            <span style={{ fontSize: '15px', fontWeight: '500', color: '#555' }}>Tổng tạm tính ({quantity} sản phẩm):</span>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fb71b0', marginTop: '4px' }}>
+                                {totalPrice} đ
                             </div>
                         </div>
 
-                        {/* NHÓM NÚT HÀNH ĐỘNG MUA HÀNG */}
-                        <div className="detail-actions">
-                            <button className="detail-btn-cart" onClick={handleAddToCart} title="Thêm vào giỏ hàng">
-                                <i className="fa-solid fa-cart-plus"></i>
-                            </button>
-                            <button className="detail-btn-buy" onClick={handleBuyNow}>Mua hàng</button>
+                        <div className="action-buttons" style={{ marginTop: '25px' }}>
+                            <Link to="/payment" state={{
+                                checkoutProducts: [{ id: product.productId, name: product.productName, image: product.image ? `http://localhost:5000/images/${product.image}` : '/img/default-product.jpg', quantity, size: selectedSize, priceBySize: { [selectedSize]: rawFinalPrice } }],
+                                temporaryTotal, discountAmount, finalTotal: rawTotalPrice
+                            }} style={{ textDecoration: 'none' }}>
+                                <button className="btn-buy-now" style={{ width: '100%', padding: '15px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', boxShadow: '0 4px 15px rgba(251, 113, 176, 0.4)' }}>
+                                    MUA NGAY
+                                </button>
+                            </Link>
                         </div>
                     </div>
-                </section>
-            </main>
+                </div>
+
+                <div className="product-bottom-info">
+                    <div className="tab-headers">
+                        <button className={`tab-link ${activeTab === 'desc' ? 'active' : ''}`} onClick={() => setActiveTab('desc')}>
+                            MÔ TẢ SẢN PHẨM
+                        </button>
+                        <button className={`tab-link ${activeTab === 'review' ? 'active' : ''}`} onClick={() => setActiveTab('review')}>
+                            ĐÁNH GIÁ ({reviews.length})
+                        </button>
+                    </div>
+
+                    <div className="tab-content">
+                        {activeTab === 'desc' ? (
+                            <div className="description-content">
+                                <h4>Thông tin chi tiết</h4>
+                                <div className="full-text">
+                                    {product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="reviews-content">
+                                {/* FORM ĐÁNH GIÁ MỚI */}
+                                <div className="review-form-container" style={{ padding: '20px', background: '#f9f9f9', borderRadius: '10px', marginBottom: '20px' }}>
+                                    <h5>Viết đánh giá của bạn</h5>
+                                    <div className="star-selection" style={{ fontSize: '24px', cursor: 'pointer', marginBottom: '10px' }}>
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <span
+                                                key={star}
+                                                onClick={() => setUserRating(star)}
+                                                style={{ color: star <= userRating ? '#fb71b0' : '#ccc' }}
+                                            >★</span>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        className="form-control"
+                                        rows={3}
+                                        placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."
+                                        value={userComment}
+                                        onChange={(e) => setUserComment(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px' }}
+                                    ></textarea>
+                                    <button
+                                        className="btn-buy-now"
+                                        onClick={handleSubmitReview}
+                                        disabled={isSubmittingReview}
+                                        style={{ padding: '8px 20px', borderRadius: '20px', fontSize: '14px', border: 'none' }}
+                                    >
+                                        {isSubmittingReview ? 'Đang gửi...' : 'Gửi Đánh Giá'}
+                                    </button>
+                                </div>
+
+                                {/* DANH SÁCH ĐÁNH GIÁ CŨ */}
+                                <h4>Đánh giá từ khách hàng</h4>
+                                {reviews.length === 0 ? (
+                                    <p className="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                                ) : (
+                                    <div className="review-list">
+                                        {reviews.map((rev, index) => (
+                                            <div key={index} className="review-item" style={{ borderBottom: '1px solid #eee', padding: '15px 0' }}>
+                                                <div className="d-flex align-items-center mb-2">
+                                                    <strong style={{ marginRight: '10px' }}>{rev.userName || 'Khách hàng ẩn danh'}</strong>
+                                                    <span style={{ color: '#fb71b0', fontSize: '14px' }}>
+                                                        {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                                                    </span>
+                                                </div>
+                                                <p style={{ margin: '5px 0', color: '#555' }}>{rev.comment}</p>
+                                                <span style={{ fontSize: '12px', color: '#999' }}>
+                                                    {rev.created_at ? new Date(rev.created_at).toLocaleDateString('vi-VN') : 'Vừa xong'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
