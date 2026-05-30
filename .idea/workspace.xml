@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="59dcd129-e92b-4fab-8894-714e7b14aca6" name="Changes" comment="Update database">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,8 +39,8 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Dang-Thi-My-Hanh/WebCuaHangMeVaBe.git&quot;,
-    &quot;accountId&quot;: &quot;3394d5a4-329b-453f-8a71-f30195d52894&quot;
+    &quot;url&quot;: &quot;https://github.com/DangThiMyHanh2803/WebCuaHangMeVaBe.git&quot;,
+    &quot;accountId&quot;: &quot;4e2f20df-c8c8-4ff0-985a-af572b1ac813&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -64,11 +63,11 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;LyKhang&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Mon Nam 4/ChuyenDeWeb/Cửa hàng mẹ và bé/Web&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/ProjectCDW&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -76,9 +75,9 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_interpreter_path&quot;: &quot;node&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;Errors&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;D:\\Mon Nam 4\\ChuyenDeWeb\\Cửa hàng mẹ và bé\\Web\\frontend\\node_modules\\typescript\\lib&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\ProjectCDW\\frontend\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -124,7 +123,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-WS-252.27397.92" />
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.28238.7" />
+        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-IU-252.28238.7" />
       </set>
     </attachedChunks>
   </component>
@@ -163,10 +163,9 @@
       <workItem from="1779483521583" duration="1514000" />
       <workItem from="1779716469740" duration="3373000" />
       <workItem from="1779789425408" duration="4946000" />
-      <workItem from="1779805361484" duration="6524000" />
-      <workItem from="1779820382200" duration="3302000" />
-      <workItem from="1779898074456" duration="594000" />
-      <workItem from="1780154160846" duration="1320000" />
+      <workItem from="1779805361484" duration="7009000" />
+      <workItem from="1779812491396" duration="129000" />
+      <workItem from="1779875159595" duration="178000" />
     </task>
     <task id="LOCAL-00001" summary="Update database">
       <option name="closed" value="true" />
@@ -182,19 +181,19 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update database" />
     <option name="LAST_COMMIT_MESSAGE" value="Update database" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/frontend/src/pages/pageDetailsProducts/detailProduct.tsx</url>
+          <line>172</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
