@@ -52,6 +52,7 @@ const DetailProduct: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'desc' | 'review'>('desc');
 
     const [productSpecs, setProductSpecs] = useState<ProductSpec[]>([]);
+    const [stockQuantity, setStockQuantity] = useState<number>(0);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [userRating, setUserRating] = useState<number>(5);
     const [userComment, setUserComment] = useState<string>('');
@@ -120,7 +121,17 @@ const DetailProduct: React.FC = () => {
                     }
                 }
 
-                // 3. Lấy thông số kỹ thuật
+                // 3. Lấy tồn kho từ product_stock
+                try {
+                    const stockRes = await axios.get(`http://localhost:5000/api/product-stock/product/${id}`);
+                    console.log('[Stock API]', stockRes.data);
+                    setStockQuantity(stockRes.data?.quantity ?? 0);
+                } catch (err) {
+                    console.error('[Stock API error]', err);
+                    setStockQuantity(0);
+                }
+
+                // 5. Lấy thông số kỹ thuật
                 try {
                     const specRes = await axios.get(`http://localhost:5000/api/product-spec/product/${id}`);
                     setProductSpecs(Array.isArray(specRes.data) ? specRes.data : []);
@@ -128,7 +139,7 @@ const DetailProduct: React.FC = () => {
                     // Chưa có specs — bỏ qua
                 }
 
-                // 4. Lấy đánh giá
+                // 6. Lấy đánh giá
                 try {
                     const reviewRes = await axios.get(`http://localhost:5000/api/review/${id}`);
                     setReviews(Array.isArray(reviewRes.data) ? reviewRes.data : []);
@@ -150,7 +161,7 @@ const DetailProduct: React.FC = () => {
 
     const handleQuantityChange = (type: 'plus' | 'minus') => {
         setQuantity(prev => {
-            const maxStock = product?.stockQuantity || 100;
+            const maxStock = stockQuantity || 100;
             if (type === 'plus') return prev < maxStock ? prev + 1 : prev;
             return prev > 1 ? prev - 1 : 1;
         });
@@ -333,7 +344,7 @@ const DetailProduct: React.FC = () => {
                             <span className="divider">|</span>
                             <span className="text-muted">{reviews.length} Đánh giá</span>
                             <span className="divider">|</span>
-                            <span className="text-muted">{product.stockQuantity ?? 0} Đã bán</span>
+                            <span className="text-muted">{stockQuantity} Đã bán</span>
                         </div>
 
                         <div className="product-price-box">
@@ -370,7 +381,7 @@ const DetailProduct: React.FC = () => {
                             <div className="variant-label-row">
                                 <span className="variant-label-text">Số lượng</span>
                                 <span className="stock-badge">
-                                    Còn {product.stockQuantity || 100} sản phẩm
+                                    Còn {stockQuantity} sản phẩm
                                 </span>
                             </div>
                             <div className="quantity-controller">
@@ -383,7 +394,7 @@ const DetailProduct: React.FC = () => {
                                 <button
                                     className="qty-btn"
                                     onClick={() => handleQuantityChange('plus')}
-                                    disabled={quantity >= (product.stockQuantity || 100)}
+                                    disabled={quantity >= stockQuantity}
                                 >+</button>
                             </div>
                         </div>
