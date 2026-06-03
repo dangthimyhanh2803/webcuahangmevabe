@@ -42,6 +42,16 @@ const AccountMenu: React.FC = () => {
                     <a href="/account">Thông tin cá nhân</a>
                 </li>
             </ul>
+
+            <button
+                className="logout-btn"
+                onClick={() => {
+                    localStorage.removeItem("user");
+                    window.location.href = "/login";
+                }}
+            >
+                Đăng xuất
+            </button>
         </div>
     );
 };
