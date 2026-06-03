@@ -208,6 +208,102 @@
     transform: translateY(-2px);
 }
 
+.btn-checkout:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* EMPTY CART */
+.cart-empty {
+    text-align: center;
+    padding: 100px 40px;
+    color: #888;
+    font-size: 16px;
+}
+
+.cart-empty-sub {
+    font-size: 14px;
+    color: #bbb;
+}
+
+/* ADDRESS EDIT FORM */
+.address-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.address-textarea {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ffb6c1;
+    min-height: 70px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.address-edit-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-cancel-addr {
+    flex: 1;
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.btn-save-addr {
+    flex: 1;
+    padding: 8px;
+    background-color: #ff69b4;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+}
+
+/* ADDRESS DISPLAY */
+.address-display {
+    margin-top: 10px;
+}
+
+.address-box {
+    display: flex;
+    gap: 10px;
+    background-color: #fff0f6;
+    padding: 12px;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.address-map-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-change-address {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    color: #ff69b4;
+    background-color: #fff;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-change-address:hover {
+    background-color: #fff0f6;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
     .cart-container {
