@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./payment.css";
 import map from "../../assets/icons/icondiachi.png";
 import voucher from "../../assets/header/voucher.svg";
+import sanpham from "../../assets/icons/Sanpham.png";
 
 interface CheckoutProduct {
     id: number;
@@ -17,6 +18,20 @@ const Payment: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
+
+    // Thêm state để lưu thông tin người nhận
+    const [userInfo, setUserInfo] = useState({ name: "", phone: "" });
+
+    useEffect(() => {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            setUserInfo({
+                name: user.userName || "Chưa cập nhật",
+                phone: user.phone || "Chưa cập nhật"
+            });
+        }
+    }, []);
 
     // Lấy dữ liệu an toàn từ location.state
     const {
@@ -46,13 +61,11 @@ const Payment: React.FC = () => {
     };
 
     const handleConfirmPayment = () => {
-        // TRUYỀN ĐẦY ĐỦ DỮ LIỆU ĐỂ BÊN CONFIRMPAGES NHẬN ĐƯỢC
         const passState = {
             checkoutProducts: checkoutProducts,
             temporaryTotal: temporaryTotal,
             discountAmount: discountAmount,
             finalTotal: finalTotal,
-            // Có thể thêm userId, addressId nếu bạn quản lý State từ context
         };
 
         if (paymentMethod === "cod") {
@@ -67,15 +80,19 @@ const Payment: React.FC = () => {
     return (
         <div className="payment-page">
             <div className="payment-body-page">
+
                 {/* ADDRESS */}
                 <div className="payment-address">
                     <div className="payment-title"><span>Địa chỉ nhận hàng</span></div>
                     <div className="payment-container-address">
-                        <div className="payment-icon"><img src={map} alt="map" className="promo-map" /></div>
+                        <div className="payment-icon">
+                            <img src={map} alt="map" className="promo-map" />
+                        </div>
                         <div className="payment-info-user">
                             <div className="payment-name-phone">
-                                <span className="payment-name">Lý Thái Minh Khang</span>
-                                <span className="payment-phone">0123456789</span>
+                                {/* Dùng state thay vì hardcode */}
+                                <span className="payment-name">{userInfo.name}</span>
+                                <span className="payment-phone">{userInfo.phone}</span>
                             </div>
                             <div className="payment-address-detail">
                                 <p>{address}</p>
@@ -104,7 +121,14 @@ const Payment: React.FC = () => {
                             return (
                                 <div className="payment-product-card" key={`${product.id}-${product.size}`}>
                                     <div className="payment-product-info">
-                                        <img src={product.image} alt="product"/>
+                                        {/* Sửa lỗi hiển thị ảnh sản phẩm */}
+                                        <img
+                                            src={product.image.startsWith("http") ? product.image : `http://localhost:5000/image/${product.image}`}
+                                            alt={product.name} onError={(e) => {
+
+                                            (e.target as HTMLImageElement).src = sanpham; // Ảnh dự phòng nếu lỗi link đường dẫn tĩnh
+
+                                        }}/>
                                         <span className="payment-name-sp">{product.name}</span>
                                     </div>
                                     <div className="payment-type-sp">Size {product.size}</div>
@@ -139,16 +163,49 @@ const Payment: React.FC = () => {
                     <div className="payment-title"><span>Phương thức thanh toán</span></div>
                     <div className="payment-container-method" style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "12px", marginTop: "10px" }}>
                         <div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
-                            <input type="radio" id="method_cod" name="payment_choice" value="cod" checked={paymentMethod === "cod"} onChange={() => setPaymentMethod("cod")} style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }} />
-                            <label htmlFor="method_cod" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}><i className="fa-solid fa-money-bill-wave" style={{ color: "#4caf50", marginRight: "10px" }}></i>Thanh toán tiền mặt khi nhận hàng (COD)</label>
+                            <input
+                                type="radio"
+                                id="method_cod"
+                                name="payment_choice"
+                                value="cod"
+                                checked={paymentMethod === "cod"}
+                                onChange={() => setPaymentMethod("cod")}
+                                style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
+                            />
+                            <label htmlFor="method_cod" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>
+                                <i className="fa-solid fa-money-bill-wave" style={{ color: "#4caf50", marginRight: "10px" }}></i>
+                                Thanh toán tiền mặt khi nhận hàng (COD)
+                            </label>
                         </div>
                         <div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
-                            <input type="radio" id="method_momo" name="payment_choice" value="momo" checked={paymentMethod === "momo"} onChange={() => setPaymentMethod("momo")} style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }} />
-                            <label htmlFor="method_momo" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}><i className="fa-solid fa-wallet" style={{ color: "#a50064", marginRight: "10px" }}></i>Thanh toán trực tuyến qua Ví điện tử MoMo</label>
+                            <input
+                                type="radio"
+                                id="method_momo"
+                                name="payment_choice"
+                                value="momo"
+                                checked={paymentMethod === "momo"}
+                                onChange={() => setPaymentMethod("momo")}
+                                style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
+                            />
+                            <label htmlFor="method_momo" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>
+                                <i className="fa-solid fa-wallet" style={{ color: "#a50064", marginRight: "10px" }}></i>
+                                Thanh toán trực tuyến qua Ví điện tử MoMo
+                            </label>
                         </div>
                         <div style={{ display: "flex", alignItems: "center" }}>
-                            <input type="radio" id="method_vnpay" name="payment_choice" value="vnpay" checked={paymentMethod === "vnpay"} onChange={() => setPaymentMethod("vnpay")} style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }} />
-                            <label htmlFor="method_vnpay" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}><i className="fa-solid fa-credit-card" style={{ color: "#005baa", marginRight: "10px" }}></i>Thanh toán trực tuyến qua Cổng VNPAY (ATM / Visa / QR Code)</label>
+                            <input
+                                type="radio"
+                                id="method_vnpay"
+                                name="payment_choice"
+                                value="vnpay"
+                                checked={paymentMethod === "vnpay"}
+                                onChange={() => setPaymentMethod("vnpay")}
+                                style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
+                            />
+                            <label htmlFor="method_vnpay" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>
+                                <i className="fa-solid fa-credit-card" style={{ color: "#005baa", marginRight: "10px" }}></i>
+                                Thanh toán trực tuyến qua Cổng VNPAY (ATM / Visa / QR Code)
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -156,7 +213,7 @@ const Payment: React.FC = () => {
                 {/* SUMMARY */}
                 <div className="payment-section" style={{ marginTop: "20px" }}>
                     <div className="payment-voucher-box">
-                        <img src={voucher} alt="voucher"></img>
+                        <img src={voucher} alt="voucher" />
                         <span>Mã giảm giá:</span>
                         <input type="text" placeholder="Nhập mã voucher..." />
                         <button className="payment-btn-apply">Áp dụng</button>
@@ -177,6 +234,7 @@ const Payment: React.FC = () => {
                         <button className="payment-btn-confirm" onClick={handleConfirmPayment}>Xác nhận thanh toán</button>
                     </div>
                 </div>
+
             </div>
         </div>
     );
