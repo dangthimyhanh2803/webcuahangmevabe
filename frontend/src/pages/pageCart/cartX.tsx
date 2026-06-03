@@ -1,93 +1,82 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 import {useNavigate} from "react-router-dom";
 
 
 import "./cart.css";
-
 import sanpham from "../../assets/icons/Sanpham.png";
-
 import map from "../../assets/icons/icondiachi.png";
-
+import axios from "axios";
 import voucher from "../../assets/header/voucher.svg";
-
-
 // Cấu trúc dữ liệu của một sản phẩm trong giỏ hàng
 
 interface ProductItem {
 
     id: number;
-
     name: string;
-
     priceBySize: { [key: string]: number };
-
     image: string;
-
     quantity: number;
-
     size: "S" | "M" | "L";
-
     checked: boolean;
 
 }
-
-
 const CartPage: React.FC = () => {
-
     const navigate = useNavigate();
-
-
 // 1. STATE QUẢN LÝ ĐỊA CHỈ NHẬN HÀNG
-
     const [address, setAddress] = useState<string>("");
-
     const [isEditingAddress, setIsEditingAddress] = useState<boolean>(false);
-
     const [tempAddress, setTempAddress] = useState<string>("");
-
-
     const handleEditAddress = () => {
-
         setTempAddress(address);
-
         setIsEditingAddress(true);
 
     };
-
-
     const handleSaveAddress = () => {
-
         setAddress(tempAddress);
-
         setIsEditingAddress(false);
 
     };
+    useEffect(() => {
+        const fetchDefaultAddress = async () => {
+            try {
+                const userStr = localStorage.getItem("user");
+                if (!userStr) return; // Nếu chưa đăng nhập thì không làm gì
 
+                const currentUser = JSON.parse(userStr);
+                if (!currentUser.userId) return;
 
+                // Gọi API lấy địa chỉ của user này
+                const res = await axios.get(`http://localhost:5000/api/address/user/${currentUser.userId}`);
+                const addressList = res.data;
+
+                // Tìm địa chỉ mặc định (isDefault === 1) hoặc lấy cái đầu tiên nếu không có cái nào mặc định
+                const defaultAddr = addressList.find((a: any) => a.isDefault === 1) || addressList[0];
+
+                if (defaultAddr) {
+                    // Tạo chuỗi địa chỉ hoàn chỉnh
+                    const fullAddress = `${defaultAddr.detailAddress}, ${defaultAddr.district}, ${defaultAddr.province}`;
+                    setAddress(fullAddress);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải địa chỉ mặc định:", error);
+            }
+        };
+
+        fetchDefaultAddress();
+    }, []);
 // 2. STATE QUẢN LÝ SẢN PHẨM: ĐÃ XÓA SẢN PHẨM MẶC ĐỊNH
-
     const [products, setProducts] = useState<ProductItem[]>(() => {
-
 // Chỉ lấy dữ liệu từ LocalStorage được lưu khi ấn nút "Thêm vào giỏ hàng"
-
         const saved = localStorage.getItem("cart_products");
-
         return saved ? JSON.parse(saved) : []; // Nếu chưa có sản phẩm nào thì trả về mảng rỗng []
-
     });
-
-
 // Hàm lưu trạng thái giỏ hàng cập nhật vào LocalStorage
 
     const saveAndSetProducts = (newProducts: ProductItem[]) => {
-
         setProducts(newProducts);
-
         localStorage.setItem("cart_products", JSON.stringify(newProducts));
-
     };
-
 
     const handleSizeChange = (id: number, newSize: "S" | "M" | "L") => {
 
@@ -95,43 +84,23 @@ const CartPage: React.FC = () => {
 
             product.id === id ? {...product, size: newSize} : product
         );
-
         saveAndSetProducts(updated);
-
     };
-
-
     const handleQuantityChange = (id: number, type: "increase" | "decrease") => {
-
         const updated = products.map((product) => {
-
             if (product.id === id) {
-
                 let newQuantity = product.quantity;
-
                 if (type === "increase") {
-
                     newQuantity += 1;
-
                 } else if (type === "decrease" && product.quantity > 1) {
-
                     newQuantity -= 1;
-
                 }
-
                 return {...product, quantity: newQuantity};
-
             }
-
             return product;
-
         });
-
         saveAndSetProducts(updated);
-
     };
-
-
     const handleCheckboxChange = (id: number) => {
 
         const updated = products.map((product) =>
