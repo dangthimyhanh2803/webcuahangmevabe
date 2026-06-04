@@ -45,3 +45,10 @@ app.get('/', (req, res) => {
 app.listen(5000, () => {
     console.log('Server running on port 5000');
 });
+app.use("/api/orders", orderRoutes);
+
+// THÊM DÒNG NÀY
+console.log("=== ORDER ROUTES ===");
+orderRoutes.stack.forEach(r => {
+    if (r.route) console.log(`${Object.keys(r.route.methods)[0].toUpperCase()} /api/orders${r.route.path}`);
+});

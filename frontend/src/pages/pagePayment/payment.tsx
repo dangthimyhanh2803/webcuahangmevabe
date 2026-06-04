@@ -177,21 +177,21 @@ const Payment: React.FC = () => {
                                 Thanh toán tiền mặt khi nhận hàng (COD)
                             </label>
                         </div>
-                        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
-                            <input
-                                type="radio"
-                                id="method_momo"
-                                name="payment_choice"
-                                value="momo"
-                                checked={paymentMethod === "momo"}
-                                onChange={() => setPaymentMethod("momo")}
-                                style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
-                            />
-                            <label htmlFor="method_momo" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>
-                                <i className="fa-solid fa-wallet" style={{ color: "#a50064", marginRight: "10px" }}></i>
-                                Thanh toán trực tuyến qua Ví điện tử MoMo
-                            </label>
-                        </div>
+                        {/*<div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>*/}
+                        {/*    <input*/}
+                        {/*        type="radio"*/}
+                        {/*        id="method_momo"*/}
+                        {/*        name="payment_choice"*/}
+                        {/*        value="momo"*/}
+                        {/*        checked={paymentMethod === "momo"}*/}
+                        {/*        onChange={() => setPaymentMethod("momo")}*/}
+                        {/*        style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}*/}
+                        {/*    />*/}
+                        {/*    <label htmlFor="method_momo" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>*/}
+                        {/*        <i className="fa-solid fa-wallet" style={{ color: "#a50064", marginRight: "10px" }}></i>*/}
+                        {/*        Thanh toán trực tuyến qua Ví điện tử MoMo*/}
+                        {/*    </label>*/}
+                        {/*</div>*/}
                         <div style={{ display: "flex", alignItems: "center" }}>
                             <input
                                 type="radio"

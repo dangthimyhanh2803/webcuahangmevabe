@@ -1,163 +1,131 @@
 const Order = require("../model/orderModel");
-const OrderDetail = require("../model/orderDetailModel"); // Import thêm model chi tiết để xử lý đồng bộ
+const OrderDetail = require("../model/orderDetailModel");
 
 /* GET ALL ORDERS */
 const getOrders = (req, res) => {
     Order.getOrders((err, result) => {
-        if (err) {
-            return res.status(500).json({ error: "Lỗi hệ thống khi lấy danh sách đơn hàng", details: err });
-        }
+        if (err) return res.status(500).json({ error: "Lỗi hệ thống", details: err });
         res.json(result);
     });
 };
 
-/* GET ORDER BY ID (Xem chi tiết 1 đơn hàng cụ thể) */
+/* GET ORDER BY ID */
 const getOrderById = (req, res) => {
     const id = req.params.id;
-
     Order.getOrderById(id, (err, orderResult) => {
-        if (err) {
-            return res.status(500).json({ error: "Lỗi hệ thống", details: err });
-        }
-        if (!orderResult || orderResult.length === 0) {
-            return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
-        }
-
-        // Lấy tiếp các sản phẩm thuộc đơn hàng này
+        if (err || !orderResult || orderResult.length === 0) return res.status(404).json({ message: "Không tìm thấy" });
         OrderDetail.getDetailsByOrderId(id, (detailErr, detailsResult) => {
-            if (detailErr) {
-                return res.status(500).json({ error: "Lỗi lấy chi tiết sản phẩm", details: detailErr });
+            // Khử trùng lặp ảnh sản phẩm nếu có
+            const uniqueItems = [];
+            const seen = new Set();
+            if (!detailErr && detailsResult) {
+                detailsResult.forEach(item => {
+                    if (item.orderDetailId && !seen.has(item.orderDetailId)) {
+                        seen.add(item.orderDetailId);
+                        uniqueItems.push(item);
+                    }
+                });
             }
-            // Trả về object đơn hàng gộp kèm mảng mặt hàng items
-            res.json({
-                ...orderResult[0],
-                items: detailsResult
-            });
+            res.json({ ...orderResult[0], items: uniqueItems });
         });
     });
 };
 
-/* GET ORDERS BY USER ID (Lấy lịch sử mua hàng của 1 Khách hàng cụ thể) */
+/* ✅ TỐI ƯU: LẤY LỊCH SỬ ĐƠN HÀNG KÈM CHI TIẾT SẢN PHẨM KHÔNG BỊ TRÙNG LẶP */
 const getOrdersByUserId = (req, res) => {
-    const userId = req.params.userId || req.query.userId;
+    const userId = req.params.userId;
+    Order.getOrdersByUserId(userId, (err, orders) => {
+        if (err) return res.status(500).json({ error: "Lỗi server" });
+        if (!orders || orders.length === 0) return res.json([]);
 
-    if (!userId) {
-        return res.status(400).json({ message: "Thiếu userId của khách hàng" });
-    }
+        let completed = 0;
+        const ordersWithItems = new Array(orders.length);
 
-    Order.getOrders((err, allOrders) => {
-        if (err) return res.status(500).json(err);
+        orders.forEach((order, index) => {
+            // Sửa từ order.id thành order.orderId để khớp chính xác với Model định nghĩa
+            const currentOrderId = order.orderId || order.id;
 
-        // Lọc các đơn hàng của user này
-        const userOrders = allOrders.filter(o => o.userId == userId);
+            OrderDetail.getDetailsByOrderId(currentOrderId, (detailErr, detailsResult) => {
+                // SỬA LỖI ĐẶT 1 HIỆN 4: Khử trùng lặp phần tử bằng Set (do SQL JOIN nhiều ảnh sản phẩm)
+                const uniqueItems = [];
+                const seen = new Set();
 
-        if (userOrders.length === 0) {
-            return res.json([]);
-        }
+                if (!detailErr && detailsResult) {
+                    detailsResult.forEach(item => {
+                        if (item.orderDetailId && !seen.has(item.orderDetailId)) {
+                            seen.add(item.orderDetailId);
+                            uniqueItems.push(item);
+                        } else if (!item.orderDetailId) {
+                            // Trường hợp fallback nếu DB không có orderDetailId
+                            const fallbackKey = `${item.productId}_${item.size}`;
+                            if (!seen.has(fallbackKey)) {
+                                seen.add(fallbackKey);
+                                uniqueItems.push(item);
+                            }
+                        }
+                    });
+                }
 
-        // Tiến hành lấy danh sách các mặt hàng gắn liền với các đơn hàng này
-        OrderDetail.getOrderDetails((detErr, allDetails) => {
-            if (detErr) return res.status(500).json(detErr);
+                ordersWithItems[index] = {
+                    ...order,
+                    orderId: currentOrderId,
+                    items: uniqueItems
+                };
+                completed++;
 
-            // Gộp danh sách sản phẩm vào từng đơn hàng tương ứng
-            const completedData = userOrders.map(order => {
-                const items = allDetails.filter(d => d.orderId === order.orderId);
-                return { ...order, items };
+                // Khi duyệt xong toàn bộ đơn hàng thì phản hồi về cho Frontend
+                if (completed === orders.length) {
+                    res.json(ordersWithItems);
+                }
             });
-
-            res.json(completedData);
         });
     });
 };
 
-/* CREATE ORDER (Tạo đơn hàng hoàn chỉnh bao gồm cả sản phẩm bên trong) */
+/* TẠO ĐƠN HÀNG ĐỒNG THỜI LƯU LUÔN SẢN PHẨM VÀO ORDERDETAILS */
 const createOrder = (req, res) => {
-    const {
-        userId,
-        address,
-        addressId,
-        totalPrice,
-        totalAmount,
-        discountId,
-        discountAmount,
-        finalAmount,
-        paymentMethod,
-        status,
-        items
-    } = req.body;
-
-    // Chuẩn hóa dữ liệu tiền tệ
-    const actualTotal = totalPrice || finalAmount || totalAmount || 0;
-
-    // Chuẩn hóa địa chỉ phù hợp khóa ngoại hoặc chuỗi text
-    const actualAddress = addressId || address || "Địa chỉ mặc định";
-
-    // 💡 XỬ LÝ LỖI TRUNCATED: Đồng bộ hóa giá trị trạng thái (status)
-    // Nếu phía Frontend gửi lên chữ viết thường hoặc trống, gán mặc định chuỗi tiếng Anh chuẩn ENUM phổ biến là 'Pending'.
-    let actualStatus = status || "Pending";
-
-    // Đề phòng nếu Frontend gửi lên chữ Tiếng Việt có dấu, ta chuyển đổi tự động sang chữ không dấu/mã hóa chuẩn hệ thống
-    if (actualStatus === "Chờ thanh toán") {
-        actualStatus = "Pending";
-    }
+    const { userId, addressId, totalAmount, discountId, discountAmount, finalAmount, paymentMethod, status, items } = req.body;
 
     const orderData = {
         userId: userId || 1,
-        address: actualAddress,
         addressId: addressId || null,
-        totalAmount: actualTotal,
+        totalAmount: totalAmount || 0,
         discountId: discountId || null,
         discountAmount: discountAmount || 0,
-        finalAmount: actualTotal,
-        paymentMethod: paymentMethod || "COD",
-        status: actualStatus // Đã được xử lý tránh lỗi ép kiểu ký tự (Truncated)
+        finalAmount: finalAmount || totalAmount,
+        paymentMethod: paymentMethod || "cod",
+        status: status || "pending"
     };
 
-    // 1. Tạo bản ghi chính trong bảng orders
     Order.createOrder(orderData, (err, result) => {
-        if (err) {
-            console.error("❌ Lỗi tại Order.createOrder Database:", err);
-            return res.status(500).json({ error: "Không thể tạo hóa đơn tổng", details: err.message || err });
-        }
-
-        // Lấy insertId từ kết quả trả về của MySQL
-        const newOrderId = result ? (result.insertId || result.id) : null;
-
-        if (!newOrderId) {
-            return res.status(500).json({ error: "Hệ thống không trả về Order ID mới sau khi insert." });
-        }
+        if (err) return res.status(500).json({ error: "Lỗi tạo đơn" });
+        const newOrderId = result.insertId || result.id;
 
         if (!items || items.length === 0) {
-            return res.status(201).json({ message: "Tạo đơn hàng trống thành công", orderId: newOrderId });
+            return res.status(201).json({ message: "Tạo đơn hàng thành công (không có sản phẩm)!", orderId: newOrderId });
         }
 
-        // 2. Vòng lặp thêm từng sản phẩm vào bảng orderdetails
-        let completedCount = 0;
+        let insertedCount = 0;
         let hasError = false;
 
         items.forEach((item) => {
             const detailData = {
                 orderId: newOrderId,
-                productId: item.productId || item.id,
-                quantity: item.quantity || 1,
-                price: item.price || 0,
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.price,
                 size: item.size || "M"
             };
 
             OrderDetail.createOrderDetail(detailData, (detailErr) => {
                 if (detailErr && !hasError) {
                     hasError = true;
-                    console.error("❌ Lỗi tại OrderDetail.createOrderDetail Database:", detailErr);
-                    return res.status(500).json({ error: "Lỗi khi lưu chi tiết mặt hàng vào database", details: detailErr.message || detailErr });
+                    return res.status(500).json({ error: "Lỗi khi lưu sản phẩm vào đơn hàng", details: detailErr });
                 }
 
-                completedCount++;
-                // Khi toàn bộ danh sách mặt hàng đã được lưu thành công
-                if (completedCount === items.length && !hasError) {
-                    res.status(201).json({
-                        message: "Đặt hàng thành công!",
-                        orderId: newOrderId
-                    });
+                insertedCount++;
+                if (insertedCount === items.length && !hasError) {
+                    res.status(201).json({ message: "Tạo đơn hàng và lưu chi tiết thành công!", orderId: newOrderId });
                 }
             });
         });
@@ -166,28 +134,37 @@ const createOrder = (req, res) => {
 
 /* UPDATE ORDER STATUS */
 const updateOrder = (req, res) => {
-    const id = req.params.id;
-
-    Order.updateOrder(id, req.body, (err, result) => {
-        if (err) {
-            return res.status(500).json(err);
-        }
-        res.json({
-            message: "Cập nhật trạng thái đơn hàng thành công"
-        });
+    Order.updateOrder(req.params.id, req.body, (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Cập nhật thành công" });
     });
 };
 
 /* DELETE ORDER */
 const deleteOrder = (req, res) => {
-    const id = req.params.id;
+    Order.deleteOrder(req.params.id, (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Xóa thành công" });
+    });
+};
 
-    Order.deleteOrder(id, (err, result) => {
-        if (err) {
-            return res.status(500).json(err);
+/* HUỶ ĐƠN HÀNG */
+const cancelOrder = (req, res) => {
+    const id = req.params.id;
+    Order.getOrderById(id, (err, result) => {
+        if (err || !result || result.length === 0) return res.status(404).json({ message: "Không tìm thấy" });
+        const order = result[0];
+
+        const paymentMethodLower = (order.paymentMethod || "").toLowerCase();
+        const statusLower = (order.status || "").toLowerCase();
+
+        if (paymentMethodLower !== "cod" || statusLower !== "pending") {
+            return res.status(400).json({ message: "Chỉ được huỷ đơn COD và đang chờ xử lý" });
         }
-        res.json({
-            message: "Xóa đơn hàng thành công"
+
+        Order.updateOrder(id, { ...order, status: "cancelled" }, (updateErr) => {
+            if (updateErr) return res.status(500).json({ error: "Lỗi khi huỷ đơn hàng" });
+            res.json({ message: "Huỷ đơn hàng thành công" });
         });
     });
 };
@@ -198,5 +175,6 @@ module.exports = {
     getOrdersByUserId,
     createOrder,
     updateOrder,
-    deleteOrder
+    deleteOrder,
+    cancelOrder
 };
