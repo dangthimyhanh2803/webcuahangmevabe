@@ -172,11 +172,11 @@ const CartPage: React.FC = () => {
 
                     {products.length === 0 ? (
 
-                        <div style={{textAlign: "center", padding: "100px 40px", color: "#888", fontSize: "16px"}}>
+                        <div className="cart-empty">
 
                             🛒 Giỏ hàng của bạn đang trống! <br/>
 
-                            <span style={{fontSize: "14px", color: "#bbb"}}>Vui lòng quay lại trang chủ chọn sản phẩm cần mua.</span>
+                            <span className="cart-empty-sub">Vui lòng quay lại trang chủ chọn sản phẩm cần mua.</span>
 
                         </div>
 
@@ -231,13 +231,6 @@ const CartPage: React.FC = () => {
 
                                             onChange={(e) => handleSizeChange(product.id, e.target.value as "S" | "M" | "L")}
 
-                                            style={{
-                                                padding: "4px 8px",
-                                                borderRadius: "6px",
-                                                border: "1px solid #ccc",
-                                                cursor: "pointer"
-                                            }}
-
                                         >
 
                                             <option value="S">S</option>
@@ -269,15 +262,9 @@ const CartPage: React.FC = () => {
 
 
                                     <div className="col-total">
-
                                         {(currentPrice * product.quantity).toLocaleString()}đ
-
                                         <i
-
                                             className="fa-solid fa-trash-can delete-icon"
-
-                                            style={{cursor: "pointer", marginLeft: "15px", color: "#ff4d4f"}}
-
                                             onClick={() => handleDeleteProduct(product.id)}
 
                                         ></i>
@@ -305,43 +292,21 @@ const CartPage: React.FC = () => {
 
                         {isEditingAddress ? (
 
-                            <div style={{display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px"}}>
+                            <div className="address-edit-form">
 
-<textarea
+                                <textarea
+                                    className="address-textarea"
+                                    value={tempAddress}
+                                    onChange={(e) => setTempAddress(e.target.value)}
+                                    placeholder="Nhập địa chỉ nhận hàng..."
+                                    autoFocus
+                                />
 
-    value={tempAddress}
+                                <div className="address-edit-actions">
 
-    onChange={(e) => setTempAddress(e.target.value)}
+                                    <button className="btn-cancel-addr" onClick={() => setIsEditingAddress(false)}>Hủy</button>
 
-    placeholder="Nhập địa chỉ nhận hàng..."
-
-    style={{
-        padding: "10px",
-        borderRadius: "8px",
-        border: "1px solid #ffb6c1",
-        minHeight: "70px",
-        resize: "none",
-        outline: "none"
-    }}
-
-    autoFocus
-
-/>
-
-                                <div style={{display: "flex", gap: "10px"}}>
-
-                                    <button onClick={() => setIsEditingAddress(false)}
-                                            style={{flex: 1, padding: "8px", cursor: "pointer"}}>Hủy
-                                    </button>
-
-                                    <button onClick={handleSaveAddress} style={{
-                                        flex: 1,
-                                        padding: "8px",
-                                        backgroundColor: "#ff69b4",
-                                        color: "#fff",
-                                        cursor: "pointer"
-                                    }}>Lưu
-                                    </button>
+                                    <button className="btn-save-addr" onClick={handleSaveAddress}>Lưu</button>
 
                                 </div>
 
@@ -351,78 +316,33 @@ const CartPage: React.FC = () => {
 
                             address ? (
 
-                                <div style={{marginTop: "10px"}}>
-
-                                    <div style={{
-                                        display: "flex",
-                                        gap: "10px",
-                                        backgroundColor: "#fff0f6",
-                                        padding: "12px",
-                                        borderRadius: "8px"
-                                    }}>
-
-                                        <img src={map} alt="map" style={{width: "20px", height: "20px"}}/>
-
+                                <div className="address-display">
+                                    <div className="address-box">
+                                        <img src={map} alt="map" className="address-map-icon"/>
                                         <span>{address}</span>
-
                                     </div>
-
-                                    <button onClick={handleEditAddress} style={{
-                                        marginTop: "10px",
-                                        width: "100%",
-                                        padding: "8px",
-                                        color: "#ff69b4",
-                                        backgroundColor: "#fff",
-                                        cursor: "pointer"
-                                    }}>Thay đổi địa chỉ
-                                    </button>
-
+                                    <button className="btn-change-address" onClick={() => navigate("/address")}>Thay đổi địa chỉ</button>
                                 </div>
-
                             ) : (
-
                                 <button className="btn-location" onClick={handleEditAddress}>
-
                                     <img src={map} alt="map"/> Xác định địa chỉ nhận hàng
-
                                 </button>
-
                             )
-
                         )}
-
                     </div>
-
-
                     <div className="summary-box total-box">
-
                         <div className="price-row"><span>Tính tạm</span><span>{temporaryTotal.toLocaleString()}đ</span>
                         </div>
-
                         <div className="price-row discount">
                             <span>Giảm giá</span><span>-{discountAmount.toLocaleString()}đ</span></div>
-
                         <hr/>
-
                         <div className="price-row final"><strong>Tổng tiền</strong><strong
                             className="total-price">{finalTotal.toLocaleString()}đ</strong></div>
-
-
                         <button
-
                             className="btn-checkout"
-
                             disabled={selectedProducts.length === 0}
-
-                            style={{
-                                opacity: selectedProducts.length === 0 ? 0.6 : 1,
-                                cursor: selectedProducts.length === 0 ? "not-allowed" : "pointer"
-                            }}
-
                             onClick={() => {
-
                                 if (!address) {
-
                                     alert("Vui lòng nhập địa chỉ nhận hàng trước khi thanh toán!");
 
                                     return;
@@ -430,21 +350,13 @@ const CartPage: React.FC = () => {
                                 }
 
 // Gửi toàn bộ thông tin sản phẩm sang màn hình payment
-
                                 navigate("/payment", {
-
                                     state: {
-
                                         address: address,
-
                                         checkoutProducts: selectedProducts,
-
                                         temporaryTotal: temporaryTotal,
-
                                         discountAmount: discountAmount,
-
                                         finalTotal: finalTotal
-
                                     }
 
                                 });

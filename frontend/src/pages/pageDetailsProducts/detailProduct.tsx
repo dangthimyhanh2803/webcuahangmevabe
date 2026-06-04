@@ -57,6 +57,7 @@ const DetailProduct: React.FC = () => {
     const [userRating, setUserRating] = useState<number>(5);
     const [userComment, setUserComment] = useState<string>('');
     const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
+    const [filterRating, setFilterRating] = useState<number>(0);
 
     const [mainImage, setMainImage] = useState<string>('/img/default-product.jpg');
     const [productImages, setProductImages] = useState<string[]>([]);
@@ -141,7 +142,7 @@ const DetailProduct: React.FC = () => {
 
                 // 6. Lấy đánh giá
                 try {
-                    const reviewRes = await axios.get(`http://localhost:5000/api/review/${id}`);
+                    const reviewRes = await axios.get(`http://localhost:5000/api/review/product/${id}`);
                     setReviews(Array.isArray(reviewRes.data) ? reviewRes.data : []);
                 } catch {
                     // Chưa có review — bỏ qua
@@ -231,17 +232,26 @@ const DetailProduct: React.FC = () => {
             alert("Vui lòng nhập nội dung đánh giá!");
             return;
         }
+
+        const storedUser = localStorage.getItem("user");
+        if (!storedUser) {
+            alert("Vui lòng đăng nhập để gửi đánh giá!");
+            return;
+        }
+        const currentUser = JSON.parse(storedUser);
+
         try {
             setIsSubmittingReview(true);
             const newReview = {
                 productId: product?.productId,
-                userId: 1,
+                userId: currentUser.userId,
+                orderId: null,
                 rating: userRating,
                 comment: userComment
             };
             await axios.post('http://localhost:5000/api/review', newReview);
             alert("Cảm ơn bạn đã gửi đánh giá!");
-            setReviews([{ ...newReview, userName: 'Bạn', created_at: new Date().toISOString() }, ...reviews]);
+            setReviews([{ ...newReview, userName: currentUser.userName || 'Bạn', created_at: new Date().toISOString() }, ...reviews]);
             setUserComment('');
             setUserRating(5);
         } catch (error) {
@@ -337,9 +347,9 @@ const DetailProduct: React.FC = () => {
                         )}
 
                         <div className="product-rating-row">
-                            <div className="stars" style={{ color: '#fb71b0' }}>
+                            <div className="stars">
                                 {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
-                                <span style={{ color: '#333' }}>({avgRating})</span>
+                                <span className="rating-text">({avgRating})</span>
                             </div>
                             <span className="divider">|</span>
                             <span className="text-muted">{reviews.length} Đánh giá</span>
@@ -399,26 +409,18 @@ const DetailProduct: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="dynamic-total-box" style={{ marginTop: '20px', padding: '12px 18px', background: '#fff5f8', borderRadius: '10px', border: '1px dashed #fb71b0' }}>
-                            <span style={{ fontSize: '15px', fontWeight: '500', color: '#555' }}>
+                        <div className="dynamic-total-box">
+                            <span className="dynamic-total-label">
                                 Tổng tạm tính ({quantity} sản phẩm):
                             </span>
-                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fb71b0', marginTop: '4px' }}>
+                            <div className="dynamic-total-price">
                                 {totalPrice} đ
                             </div>
                         </div>
                         <div className="action-buttons">
                             {/* GIỎ HÀNG — icon only */}
                             <button className="btn-cart" onClick={handleAddToCart}>
-                                <img
-                                    src={cartIcon}
-                                    alt="cart"
-                                    style={{
-                                        width: '22px',
-                                        height: '22px',
-                                        filter: 'invert(56%) sepia(71%) saturate(748%) hue-rotate(292deg) brightness(101%) contrast(97%)'
-                                    }}
-                                />
+                                <img src={cartIcon} alt="cart" className="cart-icon" />
                             </button>
                             {/* MUA NGAY */}
                             <Link
@@ -470,63 +472,144 @@ const DetailProduct: React.FC = () => {
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <p className="text-muted" style={{ fontSize: '15px' }}>
+                                    <p className="no-specs-msg">
                                         Chưa có thông số kỹ thuật cho sản phẩm này.
                                     </p>
                                 )}
                             </div>
                         ) : (
                             <div className="reviews-content">
-                                <div className="review-form-container" style={{ padding: '20px', background: '#f9f9f9', borderRadius: '10px', marginBottom: '20px' }}>
-                                    <h5>Viết đánh giá của bạn</h5>
-                                    <div className="star-selection" style={{ fontSize: '24px', cursor: 'pointer', marginBottom: '10px' }}>
-                                        {[1, 2, 3, 4, 5].map(star => (
-                                            <span
-                                                key={star}
-                                                onClick={() => setUserRating(star)}
-                                                style={{ color: star <= userRating ? '#fb71b0' : '#ccc' }}
-                                            >★</span>
-                                        ))}
+                                {/* TỔNG QUAN ĐÁNH GIÁ */}
+                                <div className="reviews-overview">
+                                    <div className="review-avg-box">
+                                        <div className="review-avg-score">{avgRating}</div>
+                                        <div className="review-avg-stars">
+                                            {'★'.repeat(Math.round(Number(avgRating)))}
+                                            {'☆'.repeat(5 - Math.round(Number(avgRating)))}
+                                        </div>
+                                        <div className="review-avg-count">{reviews.length} đánh giá</div>
+                                    </div>
+
+                                    <div className="review-bars">
+                                        {[5, 4, 3, 2, 1].map(star => {
+                                            const count = reviews.filter(r => r.rating === star).length;
+                                            const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                                            return (
+                                                <div
+                                                    key={star}
+                                                    onClick={() => setFilterRating(filterRating === star ? 0 : star)}
+                                                    className={`review-bar-row${filterRating !== 0 && filterRating !== star ? ' dimmed' : ''}`}
+                                                >
+                                                    <span className="review-bar-label">{star} sao</span>
+                                                    <div className="review-bar-track">
+                                                        <div className="review-bar-fill" style={{ width: `${percent}%` }} />
+                                                    </div>
+                                                    <span className="review-bar-count">{count}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* FILTER THEO SAO — hàng ngang */}
+                                <div className="review-filter-btns">
+                                    <button
+                                        onClick={() => setFilterRating(0)}
+                                        className={`review-filter-btn${filterRating === 0 ? ' active' : ''}`}
+                                    >Tất cả</button>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setFilterRating(filterRating === star ? 0 : star)}
+                                            className={`review-filter-btn${filterRating === star ? ' active' : ''}`}
+                                        >{star} sao</button>
+                                    ))}
+                                </div>
+
+                                {/* FORM VIẾT ĐÁNH GIÁ */}
+                                {/*<div className="review-form-box">
+                                    <h5 className="review-form-title">Viết đánh giá của bạn</h5>
+                                    <div className="review-star-row">
+                                        <span className="review-star-label">Chọn số sao:</span>
+                                        <div className="review-star-selector">
+                                            {[1, 2, 3, 4, 5].map(star => (
+                                                <span
+                                                    key={star}
+                                                    onClick={() => setUserRating(star)}
+                                                    style={{ color: star <= userRating ? '#facc15' : '#ddd' }}
+                                                >★</span>
+                                            ))}
+                                        </div>
+                                        <span className="review-rating-badge">{userRating} sao</span>
                                     </div>
                                     <textarea
-                                        className="form-control"
+                                        className="review-textarea"
                                         rows={3}
                                         placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."
                                         value={userComment}
                                         onChange={(e) => setUserComment(e.target.value)}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px' }}
                                     />
                                     <button
-                                        className="btn-buy-now"
+                                        className="btn-buy-now review-submit-btn"
                                         onClick={handleSubmitReview}
                                         disabled={isSubmittingReview}
-                                        style={{ padding: '8px 20px', borderRadius: '20px', fontSize: '14px', border: 'none' }}
                                     >
-                                        {isSubmittingReview ? 'Đang gửi...' : 'Gửi Đánh Giá'}
+                                        {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
                                     </button>
-                                </div>
+                                </div>*/}
 
-                                <h4>Đánh giá từ khách hàng</h4>
-                                {reviews.length === 0 ? (
-                                    <p className="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-                                ) : (
-                                    <div className="review-list">
-                                        {reviews.map((rev, index) => (
-                                            <div key={index} className="review-item" style={{ borderBottom: '1px solid #eee', padding: '15px 0' }}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <strong style={{ marginRight: '10px' }}>{rev.userName || 'Khách hàng ẩn danh'}</strong>
-                                                    <span style={{ color: '#fb71b0', fontSize: '14px' }}>
-                                                        {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
-                                                    </span>
+                                {/* DANH SÁCH ĐÁNH GIÁ */}
+                                <h4 className="review-list-title">
+                                    Đánh giá từ khách hàng
+                                    {filterRating > 0 && (
+                                        <span className="review-filter-badge">
+                                            {filterRating} sao
+                                            <span onClick={() => setFilterRating(0)} className="review-filter-badge-close">×</span>
+                                        </span>
+                                    )}
+                                </h4>
+
+                                {(() => {
+                                    const filtered = filterRating > 0
+                                        ? reviews.filter(r => r.rating === filterRating)
+                                        : reviews;
+
+                                    if (filtered.length === 0) return (
+                                        <p className="review-empty">
+                                            {filterRating > 0
+                                                ? `Chưa có đánh giá ${filterRating} sao nào.`
+                                                : 'Chưa có đánh giá nào. Hãy là người đầu tiên!'}
+                                        </p>
+                                    );
+
+                                    return (
+                                        <div className="review-list">
+                                            {filtered.map((rev, index) => (
+                                                <div key={index} className="review-item">
+                                                    <div className="review-avatar">
+                                                        {(rev.userName || 'K').charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="review-body">
+                                                        <div className="review-meta">
+                                                            <strong className="review-username">{rev.userName || 'Khách hàng ẩn danh'}</strong>
+                                                            <span className="review-date">
+                                                                {rev.created_at
+                                                                    ? new Date(rev.created_at).toLocaleDateString('vi-VN')
+                                                                    : 'Vừa xong'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="review-stars-display">
+                                                            {'★'.repeat(rev.rating)}
+                                                            <span className="review-stars-empty">{'★'.repeat(5 - rev.rating)}</span>
+                                                            <span className="review-score-badge">{rev.rating}.0</span>
+                                                        </div>
+                                                        <p className="review-comment">{rev.comment}</p>
+                                                    </div>
                                                 </div>
-                                                <p style={{ margin: '5px 0', color: '#555' }}>{rev.comment}</p>
-                                                <span style={{ fontSize: '12px', color: '#999' }}>
-                                                    {rev.created_at ? new Date(rev.created_at).toLocaleDateString('vi-VN') : 'Vừa xong'}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>

@@ -15,13 +15,17 @@ const PhoneForm: React.FC<Props> = ({
                                         setPhone
                                     }) => {
 
-    const [phone, setLocalPhone] =
-        useState("");
-    const [showTerms,
-        setShowTerms] =
-        useState(false);
-    const handleContinue = async () => {
+    const [phone, setLocalPhone] = useState("");
+    const [showTerms, setShowTerms] = useState(false);
+    const [agreed, setAgreed] = useState(false);
+    const [termsError, setTermsError] = useState(false);
 
+    const handleContinue = async () => {
+        if (!agreed) {
+            setTermsError(true);
+            return;
+        }
+        setTermsError(false);
         try {
 
             const res = await axios.post(
@@ -70,26 +74,31 @@ const PhoneForm: React.FC<Props> = ({
             />
 
             <div className="checkbox">
-                <input type="checkbox" id="agree" />
+                <input
+                    type="checkbox"
+                    id="agree"
+                    checked={agreed}
+                    onChange={(e) => {
+                        setAgreed(e.target.checked);
+                        if (e.target.checked) setTermsError(false);
+                    }}
+                />
                 <label htmlFor="agree">
-
                     Ba mẹ đã đọc và đồng ý với
-
                     <span
                         className="terms-link"
                         onClick={(e) => {
-
                             e.preventDefault();
-
                             setShowTerms(true);
                         }}
                     >
-            Điều Khoản Chung
-            & Chính Sách Bảo Mật
-        </span>
-
+                        Điều Khoản Chung & Chính Sách Bảo Mật
+                    </span>
                 </label>
             </div>
+            {termsError && (
+                <p className="terms-error">Vui lòng đồng ý với điều khoản để tiếp tục</p>
+            )}
             {
                 showTerms && (
 
