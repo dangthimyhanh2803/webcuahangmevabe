@@ -24,6 +24,13 @@ interface Product {
     stockQuantity?: number;
 }
 
+interface ProductSpec {
+    specId: number;
+    productId: number;
+    specName: string;
+    specValue: string;
+}
+
 interface Review {
     reviewId?: number;
     userId?: number;
@@ -44,6 +51,8 @@ const DetailProduct: React.FC = () => {
     const [quantity, setQuantity] = useState<number>(1);
     const [activeTab, setActiveTab] = useState<'desc' | 'review'>('desc');
 
+    const [productSpecs, setProductSpecs] = useState<ProductSpec[]>([]);
+    const [stockQuantity, setStockQuantity] = useState<number>(0);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [userRating, setUserRating] = useState<number>(5);
     const [userComment, setUserComment] = useState<string>('');
@@ -112,7 +121,25 @@ const DetailProduct: React.FC = () => {
                     }
                 }
 
-                // 3. Lấy đánh giá
+                // 3. Lấy tồn kho từ product_stock
+                try {
+                    const stockRes = await axios.get(`http://localhost:5000/api/product-stock/product/${id}`);
+                    console.log('[Stock API]', stockRes.data);
+                    setStockQuantity(stockRes.data?.quantity ?? 0);
+                } catch (err) {
+                    console.error('[Stock API error]', err);
+                    setStockQuantity(0);
+                }
+
+                // 5. Lấy thông số kỹ thuật
+                try {
+                    const specRes = await axios.get(`http://localhost:5000/api/product-spec/product/${id}`);
+                    setProductSpecs(Array.isArray(specRes.data) ? specRes.data : []);
+                } catch {
+                    // Chưa có specs — bỏ qua
+                }
+
+                // 6. Lấy đánh giá
                 try {
                     const reviewRes = await axios.get(`http://localhost:5000/api/review/${id}`);
                     setReviews(Array.isArray(reviewRes.data) ? reviewRes.data : []);
@@ -134,7 +161,7 @@ const DetailProduct: React.FC = () => {
 
     const handleQuantityChange = (type: 'plus' | 'minus') => {
         setQuantity(prev => {
-            const maxStock = product?.stockQuantity || 100;
+            const maxStock = stockQuantity || 100;
             if (type === 'plus') return prev < maxStock ? prev + 1 : prev;
             return prev > 1 ? prev - 1 : 1;
         });
@@ -305,6 +332,9 @@ const DetailProduct: React.FC = () => {
 
                     <div className="col-md-5 product-shop-ops d-flex flex-column justify-content-center ps-md-5">
                         <h1 className="product-title">{product.productName}</h1>
+                        {product.description && (
+                            <p className="product-short-desc">{product.description}</p>
+                        )}
 
                         <div className="product-rating-row">
                             <div className="stars" style={{ color: '#fb71b0' }}>
@@ -314,7 +344,7 @@ const DetailProduct: React.FC = () => {
                             <span className="divider">|</span>
                             <span className="text-muted">{reviews.length} Đánh giá</span>
                             <span className="divider">|</span>
-                            <span className="text-muted">{product.stockQuantity ?? 0} Đã bán</span>
+                            <span className="text-muted">{stockQuantity} Đã bán</span>
                         </div>
 
                         <div className="product-price-box">
@@ -330,7 +360,10 @@ const DetailProduct: React.FC = () => {
                         </div>
 
                         <div className="variant-group">
-                            <label className="variant-label">Kích cỡ</label>
+                            <div className="variant-label-row">
+                                <span className="variant-label-text">Kích cỡ</span>
+                                <span className="variant-selected-badge">{selectedSize}</span>
+                            </div>
                             <div className="variant-options">
                                 {availableSizes.map(size => (
                                     <button
@@ -345,15 +378,25 @@ const DetailProduct: React.FC = () => {
                         </div>
 
                         <div className="quantity-group">
-                            <label className="variant-label">Số lượng</label>
-                            <div className="quantity-controller">
-                                <button onClick={() => handleQuantityChange('minus')}>-</button>
-                                <input type="number" value={quantity} readOnly />
-                                <button onClick={() => handleQuantityChange('plus')}>+</button>
+                            <div className="variant-label-row">
+                                <span className="variant-label-text">Số lượng</span>
+                                <span className="stock-badge">
+                                    Còn {stockQuantity} sản phẩm
+                                </span>
                             </div>
-                            <span className="stock-info text-muted">
-                                {product.stockQuantity || 100} sản phẩm có sẵn
-                            </span>
+                            <div className="quantity-controller">
+                                <button
+                                    className="qty-btn"
+                                    onClick={() => handleQuantityChange('minus')}
+                                    disabled={quantity <= 1}
+                                >−</button>
+                                <span className="qty-display">{quantity}</span>
+                                <button
+                                    className="qty-btn"
+                                    onClick={() => handleQuantityChange('plus')}
+                                    disabled={quantity >= stockQuantity}
+                                >+</button>
+                            </div>
                         </div>
 
                         <div className="dynamic-total-box" style={{ marginTop: '20px', padding: '12px 18px', background: '#fff5f8', borderRadius: '10px', border: '1px dashed #fb71b0' }}>
@@ -415,9 +458,22 @@ const DetailProduct: React.FC = () => {
                         {activeTab === 'desc' ? (
                             <div className="description-content">
                                 <h4>Thông tin chi tiết</h4>
-                                <div className="full-text">
-                                    {product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
-                                </div>
+                                {productSpecs.length > 0 ? (
+                                    <table className="spec-table">
+                                        <tbody>
+                                            {productSpecs.map((spec) => (
+                                                <tr key={spec.specId}>
+                                                    <td className="spec-name">{spec.specName}</td>
+                                                    <td className="spec-value">{spec.specValue}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <p className="text-muted" style={{ fontSize: '15px' }}>
+                                        Chưa có thông số kỹ thuật cho sản phẩm này.
+                                    </p>
+                                )}
                             </div>
                         ) : (
                             <div className="reviews-content">
