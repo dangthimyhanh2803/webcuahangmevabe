@@ -17,6 +17,7 @@ const orderDetailRoutes = require("./routes/orderDetailRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const productSpecRoutes = require("./routes/productSpecRoutes");
 const productDiscountRoutes = require("./routes/productDiscountRoutes");
+const productStockRoutes = require("./routes/productStockRoutes");
 /* MIDDLEWARE */
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
@@ -33,6 +34,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/order-detail", orderDetailRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/product-spec", productSpecRoutes);
+app.use("/api/product-stock", productStockRoutes);
 app.use("/image", express.static("public/image"));
 /* TEST */
 app.get('/', (req, res) => {
@@ -42,4 +44,11 @@ app.get('/', (req, res) => {
 /* SERVER */
 app.listen(5000, () => {
     console.log('Server running on port 5000');
+});
+app.use("/api/orders", orderRoutes);
+
+// THÊM DÒNG NÀY
+console.log("=== ORDER ROUTES ===");
+orderRoutes.stack.forEach(r => {
+    if (r.route) console.log(`${Object.keys(r.route.methods)[0].toUpperCase()} /api/orders${r.route.path}`);
 });

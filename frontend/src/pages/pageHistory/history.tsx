@@ -1,74 +1,115 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // 👈 Thêm axios để gọi API
+import axios from "axios";
 import AccoutMenu from "../../components/accoutMenu";
 import sanpham from "../../assets/icons/Sanpham.png";
 import "./history.css";
 
-// Cấu trúc dữ liệu Đơn hàng nhận từ Backend ảo gửi về
 interface OrderItem {
     orderDetailId: number;
-    orderId: number;
     productId: number;
     name: string;
     size: "S" | "M" | "L";
     quantity: number;
     price: number;
     image: string;
-    status: string; // Trạng thái của đơn hàng chứa item này
 }
+
+interface OrderGroup {
+    orderId: number;
+    userId: number;
+    totalAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+    paymentMethod: string;
+    status: string;
+    items: OrderItem[];
+}
+
+const STATUS_MAP: { [key: string]: string } = {
+    "Tất cả": "all",
+    "Chờ thanh toán": "pending",
+    "Vận chuyển":     "confirmed",
+    "Chờ giao hàng":  "shipping",
+    "Hoàn thành":     "delivered",
+    "Đã huỷ":         "cancelled"
+};
 
 const History: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<string>("Tất cả");
-
-    // 👈 Đổi biến products thành State để lưu dữ liệu từ API đổ vào
-    const [products, setProducts] = useState<OrderItem[]>([]);
+    const [orders, setOrders] = useState<OrderGroup[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const tabs = ["Tất cả", "Chờ thanh toán", "Vận chuyển", "Chờ giao hàng", "Hoàn thành"];
+    const tabs = ["Tất cả", "Chờ thanh toán", "Vận chuyển", "Chờ giao hàng", "Hoàn thành", "Đã huỷ"];
 
-    // 👈 Lấy dữ liệu ảo từ Backend khi trang được load
-    useEffect(() => {
-        const fetchOrderHistory = async () => {
-            try {
-                // Giả định userId test là 1 (trùng với userId trong mock data backend)
-                const userId = 1;
-                const response = await axios.get(`http://localhost:5000/api/orders/user/${userId}`); // Thay port của bạn nếu khác
+    const fetchOrderHistory = async () => {
+        try {
+            setLoading(true);
+            const userStr = localStorage.getItem("user");
+            const currentUser = userStr ? JSON.parse(userStr) : {};
+            const userId = currentUser.userId || currentUser.id;
 
-                // Vì Backend trả về mảng Đơn hàng, mỗi đơn hàng có mảng `items` bên trong.
-                // Chúng ta sẽ "phẳng hóa" (flatten) ra thành danh sách các sản phẩm để khớp với giao diện cũ của bạn.
-                const allItems: OrderItem[] = [];
-                response.data.forEach((order: any) => {
-                    if (order.items && order.items.length > 0) {
-                        order.items.forEach((item: any) => {
-                            allItems.push({
-                                ...item,
-                                status: order.status // Lấy luôn trạng thái của đơn hàng gán vào item
-                            });
-                        });
-                    }
-                });
-
-                setProducts(allItems);
-            } catch (error) {
-                console.error("Lỗi khi lấy lịch sử đơn hàng ảo:", error);
-            } finally {
+            if (!userId) {
+                console.error("❌ Lỗi: Không lấy được userId từ localStorage.");
                 setLoading(false);
+                return;
             }
-        };
 
-        fetchOrderHistory();
-    }, []);
+            const response = await axios.get(`http://localhost:5000/api/orders/user/${userId}`);
+            setOrders(response.data || []);
+        } catch (error) {
+            console.error("❌ Lỗi kết nối API lịch sử đơn hàng:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // Lọc sản phẩm theo Tab được chọn
-    const filteredProducts = activeTab === "Tất cả"
-        ? products
-        : products.filter(p => p.status === activeTab);
+    useEffect(() => { fetchOrderHistory(); }, []);
+
+    const handleCancelOrder = async (orderId: number) => {
+        if (!window.confirm("Bạn có chắc muốn huỷ toàn bộ đơn hàng này không?")) return;
+        try {
+            await axios.patch(`http://localhost:5000/api/orders/${orderId}/cancel`);
+            alert("Huỷ đơn hàng thành công!");
+            fetchOrderHistory();
+        } catch (error: any) {
+            const msg = error.response?.data?.message || "Có lỗi xảy ra khi huỷ đơn hàng";
+            alert(msg);
+        }
+    };
+
+    const filteredOrders = activeTab === "Tất cả"
+        ? orders
+        : orders.filter(o => (o.status || "").toLowerCase() === STATUS_MAP[activeTab].toLowerCase());
+
+    const getImageSrc = (image: string) => {
+        if (!image) return sanpham;
+        if (image.startsWith("data:") || image.startsWith("http")) return image;
+        return `http://localhost:5000${image}`;
+    };
+
+    // ✅ HÀM KHỬ TRÙNG LẶP SẢN PHẨM: Xóa bỏ các dòng bị nhân bản do lỗi SQL JOIN nhiều ảnh
+    const getUniqueItems = (items: OrderItem[]) => {
+        if (!items) return [];
+        const seen = new Set();
+        return items.filter(item => {
+            // Nếu có ID chi tiết đơn hàng (orderDetailId), dùng làm key để lọc
+            if (item.orderDetailId) {
+                if (seen.has(item.orderDetailId)) return false;
+                seen.add(item.orderDetailId);
+                return true;
+            }
+            // Nếu mất ID, dự phòng dùng ID sản phẩm + size làm key
+            const fallbackKey = `${item.productId}_${item.size}`;
+            if (seen.has(fallbackKey)) return false;
+            seen.add(fallbackKey);
+            return true;
+        });
+    };
 
     return (
         <div className="history">
-            {/* Breadcrumb */}
             <p className="history-breadcrumb">
                 <a href="/">Trang chủ</a> &gt;
                 <a href="/account"> Trang cá nhân</a> &gt;
@@ -76,12 +117,9 @@ const History: React.FC = () => {
             </p>
 
             <div className="history-container">
-                {/* Menu bên trái */}
                 <AccoutMenu />
 
-                {/* Khu vực hiển thị lịch sử đơn hàng */}
                 <div className="history-section">
-                    {/* Các tab trạng thái đơn hàng */}
                     <div className="history-tabs">
                         {tabs.map((tab) => (
                             <button
@@ -94,52 +132,112 @@ const History: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Tiêu đề bảng */}
                     <div className="cart-header history-header">
                         <div className="col-product">Sản phẩm</div>
-                        <div>Giá</div>
+                        <div>Giá lẻ</div>
                         <div>Kích cỡ</div>
                         <div>Số lượng</div>
-                        <div>Tổng số tiền</div>
+                        <div>Tạm tính</div>
                     </div>
 
-                    {/* Danh sách sản phẩm trong lịch sử */}
                     <div className="history-list">
                         {loading ? (
                             <p style={{ textAlign: "center", padding: "20px", color: "#666" }}>
                                 Đang tải lịch sử đơn hàng...
                             </p>
-                        ) : filteredProducts.length === 0 ? (
+                        ) : filteredOrders.length === 0 ? (
                             <p style={{ textAlign: "center", padding: "20px", color: "#666" }}>
                                 Không có đơn hàng nào trong trạng thái này.
                             </p>
                         ) : (
-                            filteredProducts.map((product) => (
-                                <div key={product.orderDetailId} className="history-item">
-                                    <div
-                                        className="col-product"
-                                        onClick={() => navigate(`/detailproduct/${product.productId}`)}
-                                        style={{ cursor: "pointer" }}
-                                    >
-                                        {/* Nếu ảnh từ database/mock lỗi thì hiển thị ảnh mặc định `sanpham` */}
-                                        <img src={product.image || sanpham} alt={product.name} />
-                                        <span className="history-item-name">{product.name}</span>
+                            filteredOrders.map((order) => (
+                                <div key={order.orderId} className="order-group-wrapper" style={{
+                                    border: "1px solid #e0e0e0",
+                                    borderRadius: "8px",
+                                    marginBottom: "20px",
+                                    padding: "15px",
+                                    backgroundColor: "#fff"
+                                }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f0f0f0", paddingBottom: "8px", marginBottom: "12px", fontSize: "14px" }}>
+                                        <span><strong>Mã đơn hàng:</strong> #{order.orderId}</span>
+                                        <span style={{ color: "#ff4d4f", fontWeight: "bold", textTransform: "uppercase" }}>
+                                            Trạng thái: {order.status}
+                                        </span>
                                     </div>
 
-                                    <div className="history-col-price">
-                                        {product.price.toLocaleString()} VNĐ
+                                    <div className="order-items-list">
+                                        {/* ✅ Đưa danh sách sản phẩm qua bộ lọc getUniqueItems() trước khi render */}
+                                        {getUniqueItems(order.items).map((product) => (
+                                            <div key={product.orderDetailId || `${product.productId}_${product.size}`} className="history-item">
+                                                <div
+                                                    className="col-product"
+                                                    onClick={() => navigate(`/detailproduct/${product.productId}`)}
+                                                    style={{ cursor: "pointer" }}
+                                                >
+                                                    <img
+                                                        src={getImageSrc(product.image)}
+                                                        alt={product.name}
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).onerror = null;
+                                                            (e.target as HTMLImageElement).src = sanpham;
+                                                        }}
+                                                    />
+                                                    <span className="history-item-name">{product.name}</span>
+                                                </div>
+
+                                                <div className="history-col-price">
+                                                    {(product.price || 0).toLocaleString()} VNĐ
+                                                </div>
+
+                                                <div className="history-col-size">
+                                                    <span>{product.size}</span>
+                                                </div>
+
+                                                <div className="history-col-quantity">
+                                                    <span>{product.quantity}</span>
+                                                </div>
+
+                                                <div className="history-col-total">
+                                                    {((product.price || 0) * (product.quantity || 0)).toLocaleString()} VNĐ
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
 
-                                    <div className="history-col-size">
-                                        <span>{product.size}</span>
-                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #f0f0f0" }}>
+                                        <div style={{ fontSize: "13px", color: "#666" }}>
+                                            Phương thức thanh toán: <strong style={{ textTransform: "uppercase" }}>{order.paymentMethod}</strong>
+                                        </div>
+                                        <div style={{ textAlign: "right" }}>
+                                            <div style={{ fontSize: "15px", marginBottom: "8px" }}>
+                                                Thành tiền (gồm ship): <span style={{ color: "#ff4d4f", fontWeight: "bold", fontSize: "18px" }}>
+                                                    {(order.finalAmount || order.totalAmount || 0).toLocaleString()} VNĐ
+                                                </span>
+                                            </div>
 
-                                    <div className="history-col-quantity">
-                                        <span>{product.quantity}</span>
-                                    </div>
-
-                                    <div className="history-col-total">
-                                        {(product.price * product.quantity).toLocaleString()} VNĐ
+                                            {(order.paymentMethod || "").toLowerCase() === "cod" &&
+                                            (order.status || "").toLowerCase() === "pending" ? (
+                                                <button
+                                                    onClick={() => handleCancelOrder(order.orderId)}
+                                                    style={{
+                                                        backgroundColor: "#ff4d4f",
+                                                        color: "#fff",
+                                                        border: "none",
+                                                        padding: "6px 16px",
+                                                        borderRadius: "20px",
+                                                        fontSize: "13px",
+                                                        cursor: "pointer",
+                                                        fontWeight: "bold"
+                                                    }}
+                                                >
+                                                    Huỷ đơn hàng
+                                                </button>
+                                            ) : (order.status || "").toLowerCase() === "cancelled" ? (
+                                                <span style={{ color: "#ff4d4f", fontSize: "13px", fontWeight: "bold" }}>
+                                                    Đã huỷ
+                                                </span>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
                             ))
