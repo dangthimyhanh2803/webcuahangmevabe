@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -103,6 +103,17 @@ export const ConfirmCOD: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
+    useEffect(() => {
+        if (isSuccess) {
+            const timer = setTimeout(() => navigate("/"), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isSuccess, navigate]);
+
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const userName = currentUser.userName || "Chưa cập nhật";
+    const userPhone = currentUser.phone || "Chưa cập nhật";
+
     const stateData = location.state || {};
     const address = stateData.address || "Chưa xác định địa chỉ";
     const checkoutProducts = stateData.checkoutProducts || [];
@@ -124,13 +135,13 @@ export const ConfirmCOD: React.FC = () => {
             });
 
             const orderPayload = {
-                userId: 1,
-                address: address,
-                totalPrice: finalAmountWithShip,
+                userId: currentUser.userId || currentUser.id,
+                totalAmount: finalAmountWithShip,
+                finalAmount: finalAmountWithShip,
+                paymentMethod: "cod",
                 items: items
             };
 
-            // Gọi API lưu vào cơ sở dữ liệu backend
             await axios.post(ORDER_API_URL, orderPayload);
 
             clearPurchasedItems(checkoutProducts);
@@ -154,12 +165,8 @@ export const ConfirmCOD: React.FC = () => {
                     <div style={{ color: "#52d681", fontSize: "70px", marginBottom: "15px" }}>🎉</div>
                     <h2 style={{ color: "#333", marginBottom: "10px" }}>Đặt hàng thành công!</h2>
                     <p style={{ color: "#666", fontSize: "15px", lineHeight: "1.5" }}>
-                        Đơn hàng COD của bạn đã được ghi nhận thành công. Hệ thống đang tiến hành đóng gói sản phẩm!
+                        Đơn hàng COD của bạn đã được ghi nhận. Đang chuyển về trang chủ...
                     </p>
-                    <div style={successBtnGroupStyle}>
-                        <button style={btnHomeStyle} onClick={() => navigate("/")}>Hoàn thành</button>
-                        <button style={btnHistoryStyle} onClick={() => navigate("/history")}>Xem lịch sử đặt hàng</button>
-                    </div>
                 </div>
             </div>
         );
@@ -175,6 +182,7 @@ export const ConfirmCOD: React.FC = () => {
                     {(finalAmountWithShip || 0).toLocaleString()}đ
                 </p>
                 <div style={{ textAlign: "left", padding: "15px", backgroundColor: "#fff0f6", borderRadius: "10px", fontSize: "14px", color: "#555", marginBottom: "10px" }}>
+                    <div style={{ marginBottom: "6px" }}><strong>Người nhận:</strong> {userName} &nbsp;|&nbsp; {userPhone}</div>
                     <strong>Địa chỉ giao hàng:</strong> <br /> {address}
                 </div>
                 <button style={btnStyle} disabled={isSubmitting} onClick={handleCompleteOrder}>
@@ -193,6 +201,17 @@ export const ConfirmMoMo: React.FC = () => {
     const location = useLocation();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (isSuccess) {
+            const timer = setTimeout(() => navigate("/"), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isSuccess, navigate]);
+
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const userName = currentUser.userName || "Chưa cập nhật";
+    const userPhone = currentUser.phone || "Chưa cập nhật";
 
     const stateData = location.state || {};
     const address = stateData.address || "Chưa xác định địa chỉ";
@@ -215,9 +234,10 @@ export const ConfirmMoMo: React.FC = () => {
             });
 
             const orderPayload = {
-                userId: 1,
-                address: address,
-                totalPrice: finalAmountWithShip,
+                userId: currentUser.userId || currentUser.id,
+                totalAmount: finalAmountWithShip,
+                finalAmount: finalAmountWithShip,
+                paymentMethod: "momo",
                 items: items
             };
 
@@ -239,12 +259,8 @@ export const ConfirmMoMo: React.FC = () => {
                     <div style={{ color: "#52d681", fontSize: "70px", marginBottom: "15px" }}>🎉</div>
                     <h2 style={{ color: "#333", marginBottom: "10px" }}>Thanh toán thành công!</h2>
                     <p style={{ color: "#666", fontSize: "15px" }}>
-                        Cảm ơn bạn đã hoàn tất thanh toán đơn hàng qua Ví Điện Tử MoMo!
+                        Đơn hàng qua MoMo đã được ghi nhận. Đang chuyển về trang chủ...
                     </p>
-                    <div style={successBtnGroupStyle}>
-                        <button style={btnHomeStyle} onClick={() => navigate("/")}>Hoàn thành</button>
-                        <button style={btnHistoryStyle} onClick={() => navigate("/history")}>Xem lịch sử đặt hàng</button>
-                    </div>
                 </div>
             </div>
         );
@@ -259,6 +275,10 @@ export const ConfirmMoMo: React.FC = () => {
                 <p style={{ fontSize: "24px", fontWeight: "bold", color: "#333", margin: "15px 0" }}>
                     {(finalAmountWithShip || 0).toLocaleString()}đ
                 </p>
+                <div style={{ textAlign: "left", padding: "12px", backgroundColor: "#fdf0f8", borderRadius: "10px", fontSize: "14px", color: "#555", marginBottom: "10px" }}>
+                    <div style={{ marginBottom: "6px" }}><strong>Người nhận:</strong> {userName} &nbsp;|&nbsp; {userPhone}</div>
+                    <strong>Địa chỉ giao hàng:</strong> <br /> {address}
+                </div>
                 <div style={{ margin: "20px auto", width: "180px", height: "180px", backgroundColor: "#f0f0f0", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "12px", border: "1px solid #ddd" }}>
                     <span style={{ color: "#999", fontSize: "13px" }}>[Mã QR MoMo Giả Lập]</span>
                 </div>
@@ -278,6 +298,17 @@ export const ConfirmVNPAY: React.FC = () => {
     const location = useLocation();
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (isSuccess) {
+            const timer = setTimeout(() => navigate("/"), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isSuccess, navigate]);
+
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const userName = currentUser.userName || "Chưa cập nhật";
+    const userPhone = currentUser.phone || "Chưa cập nhật";
 
     const stateData = location.state || {};
     const address = stateData.address || "Chưa xác định địa chỉ";
@@ -300,9 +331,10 @@ export const ConfirmVNPAY: React.FC = () => {
             });
 
             const orderPayload = {
-                userId: 1,
-                address: address,
-                totalPrice: finalAmountWithShip,
+                userId: currentUser.userId || currentUser.id,
+                totalAmount: finalAmountWithShip,
+                finalAmount: finalAmountWithShip,
+                paymentMethod: "vnpay",
                 items: items
             };
 
@@ -324,12 +356,8 @@ export const ConfirmVNPAY: React.FC = () => {
                     <div style={{ color: "#52d681", fontSize: "70px", marginBottom: "15px" }}>🎉</div>
                     <h2 style={{ color: "#333", marginBottom: "10px" }}>Thanh toán thành công!</h2>
                     <p style={{ color: "#666", fontSize: "15px" }}>
-                        Giao dịch qua cổng VNPAY của bạn đã hoàn tất thành công.
+                        Giao dịch qua VNPAY đã hoàn tất. Đang chuyển về trang chủ...
                     </p>
-                    <div style={successBtnGroupStyle}>
-                        <button style={btnHomeStyle} onClick={() => navigate("/")}>Hoàn thành</button>
-                        <button style={btnHistoryStyle} onClick={() => navigate("/history")}>Xem lịch sử đặt hàng</button>
-                    </div>
                 </div>
             </div>
         );
@@ -345,7 +373,11 @@ export const ConfirmVNPAY: React.FC = () => {
                     {(finalAmountWithShip || 0).toLocaleString()} VND
                 </p>
 
-                <div style={{ textAlign: "left", margin: "20px 0", padding: "15px", backgroundColor: "#f8f9fa", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
+                <div style={{ textAlign: "left", padding: "12px", backgroundColor: "#f0f4ff", borderRadius: "10px", fontSize: "14px", color: "#555", margin: "12px 0" }}>
+                    <div style={{ marginBottom: "6px" }}><strong>Người nhận:</strong> {userName} &nbsp;|&nbsp; {userPhone}</div>
+                    <strong>Địa chỉ giao hàng:</strong> <br /> {address}
+                </div>
+                <div style={{ textAlign: "left", margin: "12px 0", padding: "15px", backgroundColor: "#f8f9fa", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
                     <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold", fontSize: "13px", color: "#555" }}>Số thẻ test ngân hàng VNPAY:</label>
                     <input type="text" readOnly value="9704 1234 5678 9012" style={{ width: "93%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc", backgroundColor: "#fff", fontWeight: "bold", letterSpacing: "1px" }} />
                 </div>

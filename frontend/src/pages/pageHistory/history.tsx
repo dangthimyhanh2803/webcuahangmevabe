@@ -27,11 +27,11 @@ interface OrderGroup {
 }
 
 const STATUS_MAP: { [key: string]: string } = {
-    "Tất cả": "all",
-    "Chờ thanh toán": "pending",
-    "Vận chuyển":     "confirmed",
-    "Chờ giao hàng":  "shipping",
-    "Hoàn thành":     "delivered",
+    "Tất cả":         "all",
+    "Chờ xác nhận":   "pending",
+    "Chờ giao hàng":  "confirmed",
+    "Đang giao hàng": "shipping",
+    "Đã giao hàng":   "delivered",
     "Đã huỷ":         "cancelled"
 };
 
@@ -41,7 +41,7 @@ const History: React.FC = () => {
     const [orders, setOrders] = useState<OrderGroup[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const tabs = ["Tất cả", "Chờ thanh toán", "Vận chuyển", "Chờ giao hàng", "Hoàn thành", "Đã huỷ"];
+    const tabs = ["Tất cả", "Chờ xác nhận", "Chờ giao hàng", "Đang giao hàng", "Đã giao hàng", "Đã huỷ"];
 
     const fetchOrderHistory = async () => {
         try {
@@ -51,7 +51,7 @@ const History: React.FC = () => {
             const userId = currentUser.userId || currentUser.id;
 
             if (!userId) {
-                console.error("❌ Lỗi: Không lấy được userId từ localStorage.");
+                console.error(" Lỗi: Không lấy được userId từ localStorage.");
                 setLoading(false);
                 return;
             }
@@ -59,7 +59,7 @@ const History: React.FC = () => {
             const response = await axios.get(`http://localhost:5000/api/orders/user/${userId}`);
             setOrders(response.data || []);
         } catch (error) {
-            console.error("❌ Lỗi kết nối API lịch sử đơn hàng:", error);
+            console.error(" Lỗi kết nối API lịch sử đơn hàng:", error);
         } finally {
             setLoading(false);
         }
@@ -81,7 +81,11 @@ const History: React.FC = () => {
 
     const filteredOrders = activeTab === "Tất cả"
         ? orders
-        : orders.filter(o => (o.status || "").toLowerCase() === STATUS_MAP[activeTab].toLowerCase());
+        : orders.filter(o => {
+            const targetStatus = STATUS_MAP[activeTab];
+            if (!targetStatus) return false;
+            return (o.status || "").toLowerCase() === targetStatus.toLowerCase();
+        });
 
     const getImageSrc = (image: string) => {
         if (!image) return sanpham;
@@ -89,7 +93,7 @@ const History: React.FC = () => {
         return `http://localhost:5000${image}`;
     };
 
-    // ✅ HÀM KHỬ TRÙNG LẶP SẢN PHẨM: Xóa bỏ các dòng bị nhân bản do lỗi SQL JOIN nhiều ảnh
+    //  HÀM KHỬ TRÙNG LẶP SẢN PHẨM: Xóa bỏ các dòng bị nhân bản do lỗi SQL JOIN nhiều ảnh
     const getUniqueItems = (items: OrderItem[]) => {
         if (!items) return [];
         const seen = new Set();
@@ -166,7 +170,7 @@ const History: React.FC = () => {
                                     </div>
 
                                     <div className="order-items-list">
-                                        {/* ✅ Đưa danh sách sản phẩm qua bộ lọc getUniqueItems() trước khi render */}
+                                        {/*  Đưa danh sách sản phẩm qua bộ lọc getUniqueItems() trước khi render */}
                                         {getUniqueItems(order.items).map((product) => (
                                             <div key={product.orderDetailId || `${product.productId}_${product.size}`} className="history-item">
                                                 <div
@@ -229,8 +233,7 @@ const History: React.FC = () => {
                                                         cursor: "pointer",
                                                         fontWeight: "bold"
                                                     }}
-                                                >
-                                                    Huỷ đơn hàng
+                                                >Huỷ đơn hàng
                                                 </button>
                                             ) : (order.status || "").toLowerCase() === "cancelled" ? (
                                                 <span style={{ color: "#ff4d4f", fontSize: "13px", fontWeight: "bold" }}>

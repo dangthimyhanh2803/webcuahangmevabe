@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import "./payment.css";
 import map from "../../assets/icons/icondiachi.png";
 import voucher from "../../assets/header/voucher.svg";
@@ -35,7 +36,7 @@ const Payment: React.FC = () => {
 
     // Lấy dữ liệu an toàn từ location.state
     const {
-        address = "Chưa có địa chỉ",
+        address: stateAddress = "",
         checkoutProducts = [],
         temporaryTotal = 0,
         discountAmount = 0,
@@ -47,6 +48,30 @@ const Payment: React.FC = () => {
         discountAmount?: number;
         finalTotal?: number;
     };
+
+    const [address, setAddress] = useState<string>(stateAddress);
+
+    useEffect(() => {
+        if (address) return;
+        const fetchDefaultAddress = async () => {
+            try {
+                const userStr = localStorage.getItem("user");
+                if (!userStr) return;
+                const currentUser = JSON.parse(userStr);
+                if (!currentUser.userId) return;
+
+                const res = await axios.get(`http://localhost:5000/api/address/user/${currentUser.userId}`);
+                const addressList = res.data;
+                const defaultAddr = addressList.find((a: any) => a.isDefault === 1) || addressList[0];
+                if (defaultAddr) {
+                    setAddress(`${defaultAddr.detailAddress}, ${defaultAddr.district}, ${defaultAddr.province}`);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải địa chỉ mặc định:", error);
+            }
+        };
+        fetchDefaultAddress();
+    }, []);
 
     // KIỂM TRA PHÒNG NGỪA: Nếu giỏ hàng trống, chặn không cho thanh toán
     useEffect(() => {
@@ -62,6 +87,7 @@ const Payment: React.FC = () => {
 
     const handleConfirmPayment = () => {
         const passState = {
+            address: address,
             checkoutProducts: checkoutProducts,
             temporaryTotal: temporaryTotal,
             discountAmount: discountAmount,
