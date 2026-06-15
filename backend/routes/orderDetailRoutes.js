@@ -10,6 +10,7 @@ const {
     updateOrderDetail,
     deleteOrderDetail
 } = require("../controllers/orderDetailController");
+const requireVerified = require("../middleware/requireVerified");
 
 /* GET ALL */
 router.get("/", getOrderDetails);
@@ -21,7 +22,7 @@ router.get("/:id", getOrderDetailById);
 router.get("/order/:orderId", getDetailsByOrderId);
 
 /* CREATE */
-router.post("/", createOrderDetail);
+router.post("/", requireVerified, createOrderDetail);
 
 /* UPDATE */
 router.put("/:id", updateOrderDetail);

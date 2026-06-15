@@ -16,6 +16,17 @@ const ProductCard = ({productId, name, price, image}: Product) => {
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
 
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+            navigate("/login");
+            return;
+        }
+        const user = JSON.parse(userStr);
+        if (user.isVerified === false || user.isVerified === 0) {
+            navigate("/login");
+            return;
+        }
+
         const cartItem = {
             id: productId,
             name,
