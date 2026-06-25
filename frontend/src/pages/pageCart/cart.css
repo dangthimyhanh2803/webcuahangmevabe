@@ -78,9 +78,9 @@
     width: 26px;
     height: 26px;
     border: 1px solid #ddd;
-    background: var(--mint-bg);
+    background: #f5f5f5;
     border-radius: 6px;
-    color: #ed289c;
+    color: #fa28bf;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -90,7 +90,7 @@
     transition: 0.2s;
 }
 .q-btn button:hover {
-    background: #f5f5f5;
+    background: #ffa1d7;
     border-color: var(--accent-pink);
 }
 .q-btn span {
@@ -158,6 +158,8 @@
 .btn-location:hover,
 .btn-coupon:hover {
     background: #ffe4ee;
+
+
 }
 
 /* PRICE ROW */

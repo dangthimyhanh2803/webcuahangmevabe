@@ -9,12 +9,13 @@ const {
     deleteOrder,
     cancelOrder
 } = require("../controllers/orderController");
+const requireVerified = require("../middleware/requireVerified");
 
 // Các route
 router.get("/", getOrders);
 router.get("/user/:userId", getOrdersByUserId);
 router.get("/:id", getOrderById);
-router.post("/", createOrder);
+router.post("/", requireVerified, createOrder);
 router.put("/:id", updateOrder);
 router.delete("/:id", deleteOrder);
 router.patch("/:id/cancel", cancelOrder);

@@ -197,8 +197,23 @@ const DetailProduct: React.FC = () => {
     };
 
     const { originalPrice, finalPrice, discount, rawFinalPrice, totalPrice, rawTotalPrice, temporaryTotal, discountAmount } = calculatePrices();
+    const checkAuth = (): boolean => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+            navigate("/login");
+            return false;
+        }
+        const user = JSON.parse(userStr);
+        if (user.isVerified === false || user.isVerified === 0) {
+            navigate("/login");
+            return false;
+        }
+        return true;
+    };
+
     const handleAddToCart = () => {
         if (!product) return;
+        if (!checkAuth()) return;
 
         const cartItem = {
             id: product.productId,
@@ -225,6 +240,28 @@ const DetailProduct: React.FC = () => {
 
         localStorage.setItem("cart_products", JSON.stringify(cart));
         alert("Đã thêm vào giỏ hàng!");
+    };
+
+    const handleBuyNow = () => {
+        if (!product) return;
+        if (!checkAuth()) return;
+
+        navigate("/payment", {
+            state: {
+                checkoutProducts: [{
+                    id: product.productId,
+                    name: product.productName,
+                    image: mainImage,
+                    quantity,
+                    size: selectedSize,
+                    checked: true,
+                    priceBySize: { [selectedSize]: rawFinalPrice }
+                }],
+                temporaryTotal,
+                discountAmount,
+                finalTotal: rawTotalPrice
+            }
+        });
     };
 
     const handleSubmitReview = async () => {
@@ -423,25 +460,7 @@ const DetailProduct: React.FC = () => {
                                 <img src={cartIcon} alt="cart" className="cart-icon" />
                             </button>
                             {/* MUA NGAY */}
-                            <Link
-                                to="/payment"
-                                state={{
-                                    checkoutProducts: [{
-                                        id: product.productId,
-                                        name: product.productName,
-                                        image: mainImage,
-                                        quantity,
-                                        size: selectedSize,
-                                        checked: true,
-                                        priceBySize: { [selectedSize]: rawFinalPrice }
-                                    }],
-                                    temporaryTotal,
-                                    discountAmount,
-                                    finalTotal: rawTotalPrice
-                                }}
-                            >
-                                <button className="btn-buy-now">MUA NGAY</button>
-                            </Link>
+                            <button className="btn-buy-now" onClick={handleBuyNow}>MUA NGAY</button>
                         </div>
                     </div>
                 </div>

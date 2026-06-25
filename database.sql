@@ -81,6 +81,7 @@ CREATE TABLE orderdetails (
   productId INT,
   quantity INT,
   price INT,
+  size ENUM('S','M','L') DEFAULT 'M',
   FOREIGN KEY (orderId) REFERENCES orders(orderId),
   FOREIGN KEY (productId) REFERENCES products(productId)
 );

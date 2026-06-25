@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from "react";
 
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 
 
 import "./cart.css";
@@ -23,6 +23,7 @@ interface ProductItem {
 }
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 // 1. STATE QUẢN LÝ ĐỊA CHỈ NHẬN HÀNG
     const [address, setAddress] = useState<string>("");
     const [isEditingAddress, setIsEditingAddress] = useState<boolean>(false);
@@ -64,7 +65,7 @@ const CartPage: React.FC = () => {
         };
 
         fetchDefaultAddress();
-    }, []);
+    }, [location.key]);
 // 2. STATE QUẢN LÝ SẢN PHẨM: ĐÃ XÓA SẢN PHẨM MẶC ĐỊNH
     const [products, setProducts] = useState<ProductItem[]>(() => {
 // Chỉ lấy dữ liệu từ LocalStorage được lưu khi ấn nút "Thêm vào giỏ hàng"

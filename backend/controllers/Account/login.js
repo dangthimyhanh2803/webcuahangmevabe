@@ -85,7 +85,10 @@ const login = (req, res) => {
                     user.phone,
 
                     role:
-                    user.role
+                    user.role,
+
+                    isVerified:
+                    user.isVerified
                 }
             });
         }

@@ -30,7 +30,7 @@ function App() {
 console.log(DetailProduct);
 export default App;
 */
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from "./layout/mainLayout";
 import LoginLayout from "./layout/loginLayout";
 
@@ -44,6 +44,20 @@ import Payment from "./pages/pagePayment/payment";
 import DetailProduct from "./pages/pageDetailsProducts/detailProduct";
 import History from "./pages/pageHistory/history";
 import { ConfirmCOD, ConfirmMoMo, ConfirmVNPAY } from "./pages/pagePayment/confirmPages";
+
+// Chặn trang nếu chưa đăng nhập hoặc tài khoản chưa kích hoạt
+const ProtectedRoute = ({ children }) => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+        return <Navigate to="/login" replace />;
+    }
+    const user = JSON.parse(userStr);
+    if (user.isVerified === false || user.isVerified === 0) {
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
+
 function App() {
     return (
         <BrowserRouter>
@@ -55,8 +69,8 @@ function App() {
                     <Route path="/search" element={<SearchResults />} />
                     <Route path="/address" element={<Address />} />
                     <Route path="/account" element={<Account />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/payment" element={<Payment />} />
+                    <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+                    <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
                     <Route path="/history" element={<History />} />
                     <Route path="/detailproduct/:id" element={<DetailProduct />} />
                 </Route>
