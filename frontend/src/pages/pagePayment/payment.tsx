@@ -19,8 +19,6 @@ const Payment: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
-
-    // Thêm state để lưu thông tin người nhận
     const [userInfo, setUserInfo] = useState({ name: "", phone: "" });
 
     useEffect(() => {
@@ -34,46 +32,24 @@ const Payment: React.FC = () => {
         }
     }, []);
 
-    // Lấy dữ liệu an toàn từ location.state
     const {
-        address: stateAddress = "",
+        address = "Chưa có địa chỉ",
+        addressId = 1,
         checkoutProducts = [],
         temporaryTotal = 0,
         discountAmount = 0,
         finalTotal = 0
     } = (location.state || {}) as {
         address?: string;
+        addressId?: number;
         checkoutProducts?: CheckoutProduct[];
         temporaryTotal?: number;
         discountAmount?: number;
         finalTotal?: number;
     };
 
-    const [address, setAddress] = useState<string>(stateAddress);
+    const finalAmountWithShip = finalTotal + 25000;
 
-    useEffect(() => {
-        if (address) return;
-        const fetchDefaultAddress = async () => {
-            try {
-                const userStr = localStorage.getItem("user");
-                if (!userStr) return;
-                const currentUser = JSON.parse(userStr);
-                if (!currentUser.userId) return;
-
-                const res = await axios.get(`http://localhost:5000/api/address/user/${currentUser.userId}`);
-                const addressList = res.data;
-                const defaultAddr = addressList.find((a: any) => a.isDefault === 1) || addressList[0];
-                if (defaultAddr) {
-                    setAddress(`${defaultAddr.detailAddress}, ${defaultAddr.district}, ${defaultAddr.province}`);
-                }
-            } catch (error) {
-                console.error("Lỗi khi tải địa chỉ mặc định:", error);
-            }
-        };
-        fetchDefaultAddress();
-    }, []);
-
-    // KIỂM TRA PHÒNG NGỪA: Nếu giỏ hàng trống, chặn không cho thanh toán
     useEffect(() => {
         if (checkoutProducts.length === 0) {
             alert("Giỏ hàng thanh toán của bạn đang trống! Vui lòng chọn sản phẩm trước.");
@@ -81,25 +57,52 @@ const Payment: React.FC = () => {
         }
     }, [checkoutProducts, navigate]);
 
-    const handleBackToCart = () => {
-        navigate("/cart");
-    };
+    const handleBackToCart = () => navigate("/cart");
 
-    const handleConfirmPayment = () => {
+    // LUỒNG XỬ LÝ THANH TOÁN THẬT KHI BẤM NÚT XÁC NHẬN
+    const handleConfirmPayment = async () => {
         const passState = {
-            address: address,
-            checkoutProducts: checkoutProducts,
-            temporaryTotal: temporaryTotal,
-            discountAmount: discountAmount,
-            finalTotal: finalTotal,
+            addressId,
+            checkoutProducts,
+            temporaryTotal,
+            discountAmount,
+            finalTotal,
         };
 
         if (paymentMethod === "cod") {
             navigate("/payment/confirm-cod", { state: passState });
-        } else if (paymentMethod === "momo") {
-            navigate("/payment/confirm-momo", { state: passState });
         } else if (paymentMethod === "vnpay") {
-            navigate("/payment/confirm-vnpay", { state: passState });
+            try {
+                // Định dạng danh sách mặt hàng để gửi lên API Backend
+                const items = checkoutProducts.map((p: any) => ({
+                    productId: p.id || p.productId,
+                    quantity: p.quantity || 1,
+                    price: p.priceBySize ? (p.priceBySize[p.size] || 0) : (p.price || 0),
+                    size: p.size || "M"
+                }));
+
+                const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+                const userId = currentUser.userId || null;
+
+                // Gọi API backend khởi tạo đơn hàng Pending và nhận Link VNPAY thật
+                const response = await axios.post("http://localhost:5000/api/vnpay/create_payment", {
+                    userId,
+                    addressId,
+                    items,
+                    totalAmount: finalAmountWithShip,
+                    finalAmount: finalAmountWithShip
+                });
+
+                if (response.data && response.data.success && response.data.paymentUrl) {
+                    // CHUYỂN HƯỚNG TRÌNH DUYỆT SANG THIẾT BỊ/CỔNG THANH TOÁN VNPAY THẬT
+                    window.location.href = response.data.paymentUrl;
+                } else {
+                    alert("Không thể kết nối cổng thanh toán VNPAY. Vui lòng thử lại!");
+                }
+            } catch (error) {
+                console.error("Lỗi khi kết nối API thanh toán VNPAY thật:", error);
+                alert("Có lỗi kết nối hệ thống xảy ra, vui lòng thử lại sau!");
+            }
         }
     };
 
@@ -116,7 +119,6 @@ const Payment: React.FC = () => {
                         </div>
                         <div className="payment-info-user">
                             <div className="payment-name-phone">
-                                {/* Dùng state thay vì hardcode */}
                                 <span className="payment-name">{userInfo.name}</span>
                                 <span className="payment-phone">{userInfo.phone}</span>
                             </div>
@@ -147,14 +149,13 @@ const Payment: React.FC = () => {
                             return (
                                 <div className="payment-product-card" key={`${product.id}-${product.size}`}>
                                     <div className="payment-product-info">
-                                        {/* Sửa lỗi hiển thị ảnh sản phẩm */}
                                         <img
                                             src={product.image.startsWith("http") ? product.image : `http://localhost:5000/image/${product.image}`}
-                                            alt={product.name} onError={(e) => {
-
-                                            (e.target as HTMLImageElement).src = sanpham; // Ảnh dự phòng nếu lỗi link đường dẫn tĩnh
-
-                                        }}/>
+                                            alt={product.name}
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = sanpham;
+                                            }}
+                                        />
                                         <span className="payment-name-sp">{product.name}</span>
                                     </div>
                                     <div className="payment-type-sp">Size {product.size}</div>
@@ -169,9 +170,7 @@ const Payment: React.FC = () => {
 
                 {/* SHIPPING */}
                 <div className="payment-ship-type">
-                    <div className="payment-title">
-                        <span>Phương thức vận chuyển</span>
-                    </div>
+                    <div className="payment-title"><span>Phương thức vận chuyển</span></div>
                     <div className="payment-container-ship">
                         <div className="payment-ship-info">
                             <i className="fa-solid fa-truck-fast payment-icon-ship"></i>
@@ -188,12 +187,10 @@ const Payment: React.FC = () => {
                 <div className="payment-method-section" style={{ marginTop: "20px" }}>
                     <div className="payment-title"><span>Phương thức thanh toán</span></div>
                     <div className="payment-container-method" style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "12px", marginTop: "10px" }}>
+                        {/* COD */}
                         <div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>
                             <input
-                                type="radio"
-                                id="method_cod"
-                                name="payment_choice"
-                                value="cod"
+                                type="radio" id="method_cod" name="payment_choice" value="cod"
                                 checked={paymentMethod === "cod"}
                                 onChange={() => setPaymentMethod("cod")}
                                 style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
@@ -203,27 +200,11 @@ const Payment: React.FC = () => {
                                 Thanh toán tiền mặt khi nhận hàng (COD)
                             </label>
                         </div>
-                        {/*<div style={{ marginBottom: "15px", display: "flex", alignItems: "center" }}>*/}
-                        {/*    <input*/}
-                        {/*        type="radio"*/}
-                        {/*        id="method_momo"*/}
-                        {/*        name="payment_choice"*/}
-                        {/*        value="momo"*/}
-                        {/*        checked={paymentMethod === "momo"}*/}
-                        {/*        onChange={() => setPaymentMethod("momo")}*/}
-                        {/*        style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}*/}
-                        {/*    />*/}
-                        {/*    <label htmlFor="method_momo" style={{ display: "flex", alignItems: "center", cursor: "pointer", fontSize: "15px" }}>*/}
-                        {/*        <i className="fa-solid fa-wallet" style={{ color: "#a50064", marginRight: "10px" }}></i>*/}
-                        {/*        Thanh toán trực tuyến qua Ví điện tử MoMo*/}
-                        {/*    </label>*/}
-                        {/*</div>*/}
+
+                        {/* VNPAY */}
                         <div style={{ display: "flex", alignItems: "center" }}>
                             <input
-                                type="radio"
-                                id="method_vnpay"
-                                name="payment_choice"
-                                value="vnpay"
+                                type="radio" id="method_vnpay" name="payment_choice" value="vnpay"
                                 checked={paymentMethod === "vnpay"}
                                 onChange={() => setPaymentMethod("vnpay")}
                                 style={{ width: "18px", height: "18px", marginRight: "12px", accentColor: "#ff69b4", cursor: "pointer" }}
@@ -251,13 +232,15 @@ const Payment: React.FC = () => {
                         <div className="payment-row"><span>Giảm giá:</span><span className="payment-minus">-{discountAmount.toLocaleString()}đ</span></div>
                         <div className="payment-row payment-final">
                             <strong>Tổng thanh toán:</strong>
-                            <strong className="payment-pink-text">{(finalTotal + 25000).toLocaleString()}đ</strong>
+                            <strong className="payment-pink-text">{finalAmountWithShip.toLocaleString()}đ</strong>
                         </div>
                     </div>
 
                     <div className="payment-btn-group">
                         <button className="payment-btn-back" onClick={handleBackToCart}>Quay lại giỏ hàng</button>
-                        <button className="payment-btn-confirm" onClick={handleConfirmPayment}>Xác nhận thanh toán</button>
+                        <button className="payment-btn-confirm" onClick={handleConfirmPayment}>
+                            Xác nhận thanh toán
+                        </button>
                     </div>
                 </div>
 
