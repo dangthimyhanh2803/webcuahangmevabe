@@ -21,27 +21,17 @@ const Payment: React.FC = () => {
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
     const [userInfo, setUserInfo] = useState({ name: "", phone: "" });
 
-    useEffect(() => {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            setUserInfo({
-                name: user.userName || "Chưa cập nhật",
-                phone: user.phone || "Chưa cập nhật"
-            });
-        }
-    }, []);
+    // State quản lý địa chỉ để tự động cập nhật khi fetch API
+    const [shippingAddress, setShippingAddress] = useState<string>("Đang tải địa chỉ...");
+    const [shippingAddressId, setShippingAddressId] = useState<number>(0);
 
+    // Lấy thông tin đơn hàng từ location.state (ngoại trừ địa chỉ)
     const {
-        address = "Chưa có địa chỉ",
-        addressId = 1,
         checkoutProducts = [],
         temporaryTotal = 0,
         discountAmount = 0,
         finalTotal = 0
     } = (location.state || {}) as {
-        address?: string;
-        addressId?: number;
         checkoutProducts?: CheckoutProduct[];
         temporaryTotal?: number;
         discountAmount?: number;
@@ -50,6 +40,7 @@ const Payment: React.FC = () => {
 
     const finalAmountWithShip = finalTotal + 25000;
 
+    // Effect: Kiểm tra giỏ hàng rỗng
     useEffect(() => {
         if (checkoutProducts.length === 0) {
             alert("Giỏ hàng thanh toán của bạn đang trống! Vui lòng chọn sản phẩm trước.");
@@ -57,12 +48,72 @@ const Payment: React.FC = () => {
         }
     }, [checkoutProducts, navigate]);
 
+    // Effect: Xử lý thông tin User và Địa chỉ nhận hàng
+    // Effect: Xử lý thông tin User và Địa chỉ nhận hàng
+    useEffect(() => {
+        const fetchUserDataAndAddress = async () => {
+            const userStr = localStorage.getItem("user");
+            if (!userStr) {
+                setShippingAddress("Chưa có địa chỉ");
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            setUserInfo({
+                name: user.userName || user.name || "Chưa cập nhật",
+                phone: user.phone || "Chưa cập nhật"
+            });
+
+            const stateData = location.state as any;
+
+            // TRƯỜNG HỢP 1: Có sẵn địa chỉ truyền từ trang Giỏ Hàng
+            if (stateData && stateData.address && stateData.address !== "Chưa có địa chỉ") {
+                setShippingAddress(stateData.address);
+                setShippingAddressId(stateData.addressId || 1);
+            }
+            // TRƯỜNG HỢP 2: Đi từ nút "Mua ngay", gọi API để lấy địa chỉ mặc định
+            else {
+                try {
+                    const userId = user.userId || user.id;
+
+                    // ĐÃ SỬA LẠI ĐÚNG ĐƯỜNG LINK API CỦA BẠN (address thay vì addresses)
+                    const response = await axios.get(`http://localhost:5000/api/address/user/${userId}`);
+                    const addressList = response.data;
+
+                    if (addressList && addressList.length > 0) {
+                        // Tìm địa chỉ mặc định, nếu không có thì lấy địa chỉ đầu tiên trong mảng
+                        const defaultAddress = addressList.find((addr: any) => addr.isDefault || addr.is_default === 1 || addr.isDefault === true) || addressList[0];
+
+                        // Nối chuỗi địa chỉ (kiểm tra lại tên biến ward, district, province cho khớp với Backend nếu cần)
+                        const addressParts = [defaultAddress.ward, defaultAddress.district, defaultAddress.province].filter(Boolean);
+                        const fullAddressString = addressParts.join(', ');
+
+                        setShippingAddress(fullAddressString || "Chưa cập nhật chi tiết địa chỉ");
+                        setShippingAddressId(defaultAddress.id || defaultAddress.addressId);
+                    } else {
+                        setShippingAddress("Chưa có địa chỉ");
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi gọi API lấy địa chỉ:", error);
+                    setShippingAddress("Chưa có địa chỉ");
+                }
+            }
+        };
+
+        fetchUserDataAndAddress();
+    }, [location.state]);
+
     const handleBackToCart = () => navigate("/cart");
 
     // LUỒNG XỬ LÝ THANH TOÁN THẬT KHI BẤM NÚT XÁC NHẬN
     const handleConfirmPayment = async () => {
+        if (!shippingAddressId || shippingAddressId === 0) {
+            alert("Vui lòng thêm địa chỉ nhận hàng trước khi thanh toán!");
+            return;
+        }
+
         const passState = {
-            addressId,
+            addressId: shippingAddressId, // Sử dụng ID địa chỉ đã lấy được
             checkoutProducts,
             temporaryTotal,
             discountAmount,
@@ -87,7 +138,7 @@ const Payment: React.FC = () => {
                 // Gọi API backend khởi tạo đơn hàng Pending và nhận Link VNPAY thật
                 const response = await axios.post("http://localhost:5000/api/vnpay/create_payment", {
                     userId,
-                    addressId,
+                    addressId: shippingAddressId, // Gửi ID địa chỉ chính xác
                     items,
                     totalAmount: finalAmountWithShip,
                     finalAmount: finalAmountWithShip
@@ -123,7 +174,7 @@ const Payment: React.FC = () => {
                                 <span className="payment-phone">{userInfo.phone}</span>
                             </div>
                             <div className="payment-address-detail">
-                                <p>{address}</p>
+                                <p>{shippingAddress}</p>
                             </div>
                         </div>
                         <div className="payment-btn-change-address">
