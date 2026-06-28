@@ -12,7 +12,7 @@ import "./home.css";
 import { FaGift, FaFire, FaStar, FaTruck, FaMoneyBillWave } from "react-icons/fa";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
-import {mockProducts} from "../../data/mockProducts";
+
 interface Product {
     productId: number;
     productName: string;
@@ -35,35 +35,23 @@ const Home: React.FC = () => {
     const [activeTab, setActiveTab] = useState<"all" | "featured" | "new" | "best-selling">("featured");
 
     const [currentPage, setCurrentPage] = useState(1);
-
     const [itemsPerPage, setItemsPerPage] = useState(8);
+
     const sortedProducts = [...products].sort((a, b) => {
-
-        if (sort === "price-asc") {
-            return a.price - b.price;
-        }
-
-        if (sort === "price-desc") {
-            return b.price - a.price;
-        }
-
+        if (sort === "price-asc") return a.price - b.price;
+        if (sort === "price-desc") return b.price - a.price;
         return 0;
     });
-    const startIndex = (currentPage - 1) * itemsPerPage;
 
-    const currentProducts = sortedProducts.slice(
-        startIndex,
-        startIndex + itemsPerPage
-    );
-    const totalPages = Math.ceil(
-        sortedProducts.length / itemsPerPage
-    );
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
+    const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
 
     useEffect(() => {
         fetchByTab(activeTab);
     }, [activeTab]);
 
-    const fetchByTab = async (tab: "all" | "featured" | "new" | "best-selling", categoryId?: number | null) => {
+    const fetchByTab = async (tab: "all" | "featured" | "new" | "best-selling") => {
         setLoading(true);
         try {
             let url: string;
@@ -112,6 +100,42 @@ const Home: React.FC = () => {
         setActiveTab(tab);
     };
 
+    // ✅ HÀM THÊM VÀO GIỎ HÀNG - dùng đúng key "cart_products" và đủ fields
+    const handleAddToCart = (product: Product) => {
+        const existingCart: any[] = JSON.parse(localStorage.getItem("cart_products") || "[]");
+
+        const existingIndex = existingCart.findIndex(
+            (item: any) => item.id === product.productId && item.size === "S"
+        );
+
+        if (existingIndex !== -1) {
+            // Sản phẩm đã tồn tại với size S -> tăng số lượng
+            existingCart[existingIndex].quantity += 1;
+        } else {
+            // Thêm mới sản phẩm với đầy đủ fields mà cartX.tsx cần
+            existingCart.push({
+                id: product.productId,
+                name: product.productName,
+                image: product.imageUrl || "https://via.placeholder.com/150",
+                quantity: 1,
+                size: "S",
+                checked: true,              // ✅ mặc định chọn luôn để tính tiền ngay
+                priceBySize: {              // ✅ field bắt buộc của cartX
+                    S: product.price,
+                    M: product.price,
+                    L: product.price
+                }
+            });
+        }
+
+        // ✅ Lưu đúng key "cart_products" mà cartX.tsx đọc
+        localStorage.setItem("cart_products", JSON.stringify(existingCart));
+        alert(`Đã thêm "${product.productName}" vào giỏ hàng!`);
+
+        // Phát sự kiện để Header cập nhật số lượng giỏ hàng
+        window.dispatchEvent(new Event("cartUpdated"));
+    };
+
     return (
         <div className="home">
 
@@ -158,29 +182,22 @@ const Home: React.FC = () => {
                             Sản phẩm bán chạy
                         </button>
                     </div>
+
                     {loading ? (
                         <p>Đang tải sản phẩm...</p>
                     ) : (
                         <>
-
                             <div className="home-product-list">
-
                                 {currentProducts.map((item) => (
-
                                     <ProductCard
                                         key={item.productId}
                                         productId={item.productId}
                                         name={item.productName}
                                         price={item.price}
-                                        image={
-                                            item.imageUrl
-                                                ? item.imageUrl
-                                                : "https://via.placeholder.com/150"
-                                        }
+                                        image={item.imageUrl || "https://via.placeholder.com/150"}
+                                        onAddToCart={() => handleAddToCart(item)} // ✅ dùng hàm chung
                                     />
-
                                 ))}
-
                             </div>
 
                             <Pagination
@@ -188,70 +205,56 @@ const Home: React.FC = () => {
                                 totalPages={totalPages}
                                 setCurrentPage={setCurrentPage}
                             />
-
                         </>
                     )}
-
                 </div>
 
                 {/* RIGHT - BANNER + ƯU ĐÃI */}
                 <div className="right-sidebar">
 
                     <div className="promo-box">
-
                         <h4 className="title-icon">
                             <FaFire className="icon fire" />
                             Ưu đãi hôm nay
                         </h4>
-
                         <img
                             src={banner6}
                             alt="banner"
                             className="promo-banner"
                         />
-
                         <ul>
                             <li>
                                 <FaGift className="icon" />
                                 Giảm 20% cho đơn từ 500K
                             </li>
-
                             <li>
                                 <FaTruck className="icon" />
                                 Freeship toàn quốc
                             </li>
-
                             <li>
                                 <FaMoneyBillWave className="icon" />
                                 Hoàn tiền 10%
                             </li>
                         </ul>
-
                     </div>
 
                     <div className="promo-box">
-
                         <h4 className="title-icon">
                             <FaStar className="icon star" />
                             Gợi ý cho bạn
                         </h4>
-
                         <img
                             src={banner5}
                             alt="banner"
                             className="promo-banner"
                         />
-
                         <p>
                             Sản phẩm chăm sóc mẹ & bé an toàn, chính hãng.
                         </p>
-
                     </div>
 
                 </div>
-
             </div>
-
         </div>
     );
 };
