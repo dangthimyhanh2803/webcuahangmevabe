@@ -4,7 +4,6 @@ const {
     getReviews,
     getReviewById,
     getReviewsByProductId,
-    getReviewsByUserId,
     createReview,
     updateReview,
     deleteReview,
@@ -13,14 +12,8 @@ const {
 /* GET ALL */
 router.get("/", getReviews);
 
-
-// Nếu đặt sau, Express sẽ hiểu "product" và "user" là giá trị của :id
-
 /* GET BY PRODUCT */
 router.get("/product/:productId", getReviewsByProductId);
-
-/* GET BY USER */
-router.get("/user/:userId", getReviewsByUserId);
 
 /* GET BY ID — đặt SAU cùng */
 router.get("/:id", getReviewById);

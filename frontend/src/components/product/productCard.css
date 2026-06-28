@@ -63,6 +63,10 @@
 .pcard-add i {
     font-size: 16px;
     pointer-events: none;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
 }
 
 .pcard-add.added {

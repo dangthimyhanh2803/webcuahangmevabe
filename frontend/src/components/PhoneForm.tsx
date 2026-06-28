@@ -19,7 +19,6 @@ const PhoneForm: React.FC<Props> = ({
     const [showTerms, setShowTerms] = useState(false);
     const [agreed, setAgreed] = useState(false);
     const [termsError, setTermsError] = useState(false);
-
     const handleContinue = async () => {
         if (!agreed) {
             setTermsError(true);

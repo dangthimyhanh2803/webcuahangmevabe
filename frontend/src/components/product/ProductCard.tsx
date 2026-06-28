@@ -11,6 +11,7 @@ type Product = {
 
 const ProductCard = ({productId, name, price, image}: Product) => {
     const navigate = useNavigate();
+    const [isAdded, setIsAdded] = useState(false);
     const [added, setAdded] = useState(false);
 
     const handleAddToCart = (e: React.MouseEvent) => {
@@ -52,7 +53,6 @@ const ProductCard = ({productId, name, price, image}: Product) => {
         setAdded(true);
         setTimeout(() => setAdded(false), 1500);
     };
-
     return (
         <div className="pcard" onClick={() => navigate(`/detailproduct/${productId}`)}>
             <img src={image} alt={name} className="pcard-img"/>
@@ -63,6 +63,10 @@ const ProductCard = ({productId, name, price, image}: Product) => {
             {added && <span className="pcard-toast">Đã thêm vào giỏ!</span>}
             <button className={`pcard-add${added ? ' added' : ''}`} onClick={handleAddToCart}>
                 <i className={`fa-solid ${added ? 'fa-check' : 'fa-cart-plus'}`}></i>
+            </button>
+            <button className="pcard-add"
+                onClick={(e) => {e.stopPropagation();}}>
+                <i className="fa-solid fa-cart-plus"></i>
             </button>
         </div>
     );

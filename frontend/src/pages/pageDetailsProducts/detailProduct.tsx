@@ -457,13 +457,39 @@ const DetailProduct: React.FC = () => {
                         <div className="action-buttons">
                             {/* GIỎ HÀNG — icon only */}
                             <button className="btn-cart" onClick={handleAddToCart}>
-                                <img src={cartIcon} alt="cart" className="cart-icon" />
+                                <img
+                                    src={cartIcon}
+                                    alt="cart"
+                                    style={{
+                                        width: '22px',
+                                        height: '22px',
+                                        filter: 'invert(56%) sepia(71%) saturate(748%) hue-rotate(292deg) brightness(101%) contrast(97%)'
+                                    }}
+                                />
                             </button>
                             {/* MUA NGAY */}
-                            <button className="btn-buy-now" onClick={handleBuyNow}>MUA NGAY</button>
+                            <Link
+                                to="/payment"
+                                state={{
+                                    checkoutProducts: [{
+                                        id: product.productId,
+                                        name: product.productName,
+                                        image: mainImage,
+                                        quantity,
+                                        size: selectedSize,
+                                        checked: true,
+                                        priceBySize: { [selectedSize]: rawFinalPrice }
+                                    }],
+                                    temporaryTotal,
+                                    discountAmount,
+                                    finalTotal: rawTotalPrice
+                                }}
+                            >
+                                <button className="btn-buy-now">MUA NGAY</button>
+                            </Link>
                         </div>
-                    </div>
                 </div>
+            </div>
 
                 <div className="product-bottom-info">
                     <div className="tab-headers">
@@ -491,7 +517,7 @@ const DetailProduct: React.FC = () => {
                                         </tbody>
                                     </table>
                                 ) : (
-                                    <p className="no-specs-msg">
+                                    <p className="text-muted" style={{ fontSize: '15px' }}>
                                         Chưa có thông số kỹ thuật cho sản phẩm này.
                                     </p>
                                 )}

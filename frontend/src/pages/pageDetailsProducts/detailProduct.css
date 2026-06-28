@@ -19,6 +19,7 @@
     max-width: 1100px;
     margin: 0 auto;
     padding: 20px;
+    margin-top: 20px;
     margin-bottom: 20px;
 }
 
@@ -30,14 +31,14 @@
 }
 .breadcrumb-container a {
     text-decoration: none;
-    color: rgba(255, 109, 153, 0.73);
+    color: #0056b3;
     margin: 0 5px;
 }
 .breadcrumb-container a:hover {
     color: #fb71b0;
 }
 .breadcrumb-container span {
-    color: rgba(255, 109, 153, 0.73);
+    color: #555; 
     margin-left: 5px;
 }
 
@@ -200,7 +201,6 @@
     color: #facc15;
     margin-right: 5px;
 }
-
 .rating-text {
     color: #333;
 }
@@ -595,9 +595,7 @@
     background: #fff;
 }
 
-/* =========================================
-   Phần Review — Tổng quan
-========================================= */
+/* Phần Review — Tổng quan*/
 .reviews-overview {
     display: flex;
     align-items: center;

@@ -33,7 +33,7 @@ export default App;
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from "./layout/mainLayout";
 import LoginLayout from "./layout/loginLayout";
-import MyReviewsPage from "./pages/pageReview/myReview"; // Sửa lại đường dẫn nếu cần
+import MyReviewsPage from "./pages/pageReview/myReview";
 import Home from "./pages/pageHome/home";
 import Login from "./pages/pageLogin/login";
 import SearchResults from "./pages/pageSearchResults/searchResults";
