@@ -233,7 +233,8 @@ const History: React.FC = () => {
                                                         cursor: "pointer",
                                                         fontWeight: "bold"
                                                     }}
-                                                >Huỷ đơn hàng
+                                                >
+                                                    Huỷ đơn hàng
                                                 </button>
                                             ) : (order.status || "").toLowerCase() === "cancelled" ? (
                                                 <span style={{ color: "#ff4d4f", fontSize: "13px", fontWeight: "bold" }}>

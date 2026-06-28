@@ -428,36 +428,62 @@ const CartPage: React.FC = () => {
                         <button
 
                             className="btn-checkout"
+
                             disabled={selectedProducts.length === 0}
+
                             style={{
                                 opacity: selectedProducts.length === 0 ? 0.6 : 1,
                                 cursor: selectedProducts.length === 0 ? "not-allowed" : "pointer"
                             }}
+
                             onClick={() => {
+
                                 if (!address) {
+
                                     alert("Vui lòng nhập địa chỉ nhận hàng trước khi thanh toán!");
+
                                     return;
+
                                 }
 
 // Gửi toàn bộ thông tin sản phẩm sang màn hình payment
+
                                 navigate("/payment", {
+
                                     state: {
+
                                         address: address,
+
                                         checkoutProducts: selectedProducts,
+
                                         temporaryTotal: temporaryTotal,
+
                                         discountAmount: discountAmount,
+
                                         finalTotal: finalTotal
+
                                     }
+
                                 });
+
                             }}
+
                         >
+
                             Thanh toán ({selectedProducts.length})
+
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
         </main>
+
     );
+
 };
 
 

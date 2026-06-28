@@ -42,7 +42,6 @@ const AccountMenu: React.FC = () => {
                     <a href="/account">Thông tin cá nhân</a>
                 </li>
             </ul>
-
             <button
                 className="logout-btn"
                 onClick={() => {
