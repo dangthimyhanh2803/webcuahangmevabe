@@ -88,3 +88,8 @@
 
     cursor:pointer;
 }
+
+.discount-right button:disabled{
+    background:#22c55e;
+    color:#fff;
+}

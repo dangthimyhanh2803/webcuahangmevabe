@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import "./style/discountCoupon.css";
 import { FaTicketAlt, FaRegClock } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa";
@@ -18,14 +18,49 @@ interface Props {
 }
 
 const DiscountCoupon: React.FC<Props> = ({ discount, onUse }) => {
+    const [isSaved, setIsSaved] = useState(false);
 
+    const handleSave = () => {
+        localStorage.setItem(
+            "savedDiscount",
+            JSON.stringify(discount)
+        );
+
+        onUse?.(discount.discountCode);
+    };
     const formatValue = () => {
         if (discount.discountType === "percent") {
             return `${discount.discountValue}%`;
         }
         return `${discount.discountValue.toLocaleString()}`;
     };
+    useEffect(() => {
+        const saved = JSON.parse(
+            localStorage.getItem("savedDiscount") || "null"
+        );
 
+        setIsSaved(saved?.discountId === discount.discountId);
+    }, [discount.discountId]);
+    useEffect(() => {
+
+        const updateSaved = () => {
+
+            const saved = JSON.parse(
+                localStorage.getItem("savedDiscount") || "null"
+            );
+
+            setIsSaved(saved?.discountId === discount.discountId);
+
+        };
+
+        updateSaved();
+
+        window.addEventListener("storage", updateSaved);
+
+        return () =>
+            window.removeEventListener("storage", updateSaved);
+
+    }, [discount.discountId]);
     return (
         <div className={`discount-card ${!discount.status ? "disabled" : ""}`}>
             <div className="discount-left">
@@ -43,9 +78,20 @@ const DiscountCoupon: React.FC<Props> = ({ discount, onUse }) => {
             <div className="discount-right">
                 <button
                     disabled={!discount.status}
-                    onClick={() => onUse?.(discount.discountCode)}
+                    onClick={() => {
+                        localStorage.setItem(
+                            "savedDiscount",
+                            JSON.stringify(discount)
+                        );
+
+                        setIsSaved(true);
+
+                        window.dispatchEvent(new Event("storage"));
+
+                        onUse?.(discount.discountCode);
+                    }}
                 >
-                    Lưu
+                    {isSaved ? "Đã lưu" : "Lưu"}
                 </button>
             </div>
         </div>

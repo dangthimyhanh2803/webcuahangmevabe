@@ -432,43 +432,22 @@ const DetailProduct: React.FC = () => {
                             <span className="divider">|</span>
                             <span className="text-muted">{stockQuantity} Đã bán</span>
                         </div>
-
                         <div className="discount-slider">
-
-                            <button
-                                className="discount-nav"
-                                onClick={prevDiscount}
-                            >
-                                ❮
-                            </button>
-
-                            <div
-                                className="discount-slider-list"
-                                ref={listRef}
-                            >
-
+                            <button className="discount-nav" onClick={prevDiscount}>❮</button>
+                            <div className="discount-slider-list" ref={listRef}>
                                 {discounts.map(discount => (
-
                                     <DiscountCoupon
-                                        key={discount.discountId}
                                         discount={discount}
-                                        onUse={(code) => {
-                                            navigator.clipboard.writeText(code);
-                                            alert(`Đã sao chép ${code}`);
+                                        onUse={() => {
+                                            localStorage.setItem(
+                                                "savedDiscount",
+                                                JSON.stringify(discount)
+                                            );
                                         }}
                                     />
-
                                 ))}
-
                             </div>
-
-                            <button
-                                className="discount-nav"
-                                onClick={nextDiscount}
-                            >
-                                ❯
-                            </button>
-
+                            <button className="discount-nav" onClick={nextDiscount}>❯</button>
                         </div>
 
                         <div className="variant-group">
