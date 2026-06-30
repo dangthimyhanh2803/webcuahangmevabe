@@ -67,9 +67,26 @@ const CartPage: React.FC = () => {
     }, []);
 // 2. STATE QUẢN LÝ SẢN PHẨM: ĐÃ XÓA SẢN PHẨM MẶC ĐỊNH
     const [products, setProducts] = useState<ProductItem[]>(() => {
-// Chỉ lấy dữ liệu từ LocalStorage được lưu khi ấn nút "Thêm vào giỏ hàng"
         const saved = localStorage.getItem("cart_products");
-        return saved ? JSON.parse(saved) : []; // Nếu chưa có sản phẩm nào thì trả về mảng rỗng []
+        if (!saved) return [];
+
+        const parsed: any[] = JSON.parse(saved);
+
+        // Migration: chuẩn hóa data cũ thiếu priceBySize hoặc checked
+        const migrated = parsed.map((item) => {
+            const price = item.price || (item.priceBySize ? item.priceBySize["S"] : 0);
+            return {
+                ...item,
+                checked: item.checked !== undefined ? item.checked : true,
+                priceBySize: item.priceBySize && Object.keys(item.priceBySize).length > 0
+                    ? item.priceBySize
+                    : { S: price, M: price, L: price },
+            };
+        });
+
+        // Lưu lại data đã chuẩn hóa
+        localStorage.setItem("cart_products", JSON.stringify(migrated));
+        return migrated;
     });
 // Hàm lưu trạng thái giỏ hàng cập nhật vào LocalStorage
 
