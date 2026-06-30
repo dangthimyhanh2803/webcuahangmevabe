@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './detailProduct.css';
 import cartIcon from '../../assets/header/cart.svg';
+import DiscountCoupon from "../../components/discountCoupon";
 interface ProductImage {
     imageId: number;
     productId: number;
@@ -39,7 +40,15 @@ interface Review {
     comment: string;
     created_at?: string;
 }
-
+interface Discount {
+    discountId: number;
+    discountCode: string;
+    discountValue: number;
+    discountType: "percent" | "fixed";
+    startDate: string;
+    endDate: string;
+    status: boolean;
+}
 const DetailProduct: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -62,7 +71,7 @@ const DetailProduct: React.FC = () => {
     const [mainImage, setMainImage] = useState<string>('/img/default-product.jpg');
     const [productImages, setProductImages] = useState<string[]>([]);
     const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-
+    const [discounts, setDiscounts] = useState<Discount[]>([]);
     useEffect(() => {
         const fetchProductData = async () => {
             try {
@@ -147,7 +156,21 @@ const DetailProduct: React.FC = () => {
                 } catch {
                     // Chưa có review — bỏ qua
                 }
+                // 7. Lấy mã giảm giá
+                try {
+                    const discountRes = await axios.get(
+                        "http://localhost:5000/api/discount"
+                    );
 
+                    setDiscounts(
+                        Array.isArray(discountRes.data)
+                            ? discountRes.data.filter((d: Discount) => d.status)
+                            : []
+                    );
+
+                } catch (err) {
+                    console.log("Không lấy được voucher", err);
+                }
                 setLoading(false);
             } catch (error) {
                 console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
@@ -159,6 +182,7 @@ const DetailProduct: React.FC = () => {
         if (id) fetchProductData();
         window.scrollTo(0, 0);
     }, [id]);
+
 
     const handleQuantityChange = (type: 'plus' | 'minus') => {
         setQuantity(prev => {
@@ -298,6 +322,21 @@ const DetailProduct: React.FC = () => {
             setIsSubmittingReview(false);
         }
     };
+    const listRef = useRef<HTMLDivElement>(null);
+
+    const nextDiscount = () => {
+        listRef.current?.scrollBy({
+            left: 240,
+            behavior: "smooth"
+        });
+    };
+
+    const prevDiscount = () => {
+        listRef.current?.scrollBy({
+            left: -240,
+            behavior: "smooth"
+        });
+    };
 
     if (loading) return <div className="loading-container">Đang tải...</div>;
     if (!product) return <div className="error-container">Không tìm thấy sản phẩm.</div>;
@@ -394,16 +433,42 @@ const DetailProduct: React.FC = () => {
                             <span className="text-muted">{stockQuantity} Đã bán</span>
                         </div>
 
-                        <div className="product-price-box">
-                            {discount > 0 ? (
-                                <>
-                                    <span className="original-price">{originalPrice} đ</span>
-                                    <span className="final-price">{finalPrice} đ</span>
-                                    <span className="discount-tag">-{discount}%</span>
-                                </>
-                            ) : (
-                                <span className="final-price">{finalPrice} đ</span>
-                            )}
+                        <div className="discount-slider">
+
+                            <button
+                                className="discount-nav"
+                                onClick={prevDiscount}
+                            >
+                                ❮
+                            </button>
+
+                            <div
+                                className="discount-slider-list"
+                                ref={listRef}
+                            >
+
+                                {discounts.map(discount => (
+
+                                    <DiscountCoupon
+                                        key={discount.discountId}
+                                        discount={discount}
+                                        onUse={(code) => {
+                                            navigator.clipboard.writeText(code);
+                                            alert(`Đã sao chép ${code}`);
+                                        }}
+                                    />
+
+                                ))}
+
+                            </div>
+
+                            <button
+                                className="discount-nav"
+                                onClick={nextDiscount}
+                            >
+                                ❯
+                            </button>
+
                         </div>
 
                         <div className="variant-group">
